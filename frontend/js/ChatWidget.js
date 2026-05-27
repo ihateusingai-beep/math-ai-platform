@@ -366,6 +366,18 @@
           background: #cce5ff;
           color: #004085;
         }
+
+        .mathai-feedback.streaming {
+          background: linear-gradient(90deg, #e8f5e9 25%, #c8e6c9 50%, #e8f5e9 75%);
+          background-size: 200% 100%;
+          animation: mathai-shimmer 1.5s infinite;
+          color: #155724;
+        }
+
+        @keyframes mathai-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
       `;
       document.head.appendChild(style);
     }
@@ -474,15 +486,15 @@
       // 顯示 loading
       this._showFeedback('waiting', '🤔 思考中...');
 
-      // 發送到後端
+      // 發送到後端（SSE streaming）
       this._sendToBackend(text);
     }
 
     _sendToBackend(message) {
       const { studentId = 'guest', classId = 'P1A' } = this.options;
 
-      // Phase 2: 調用後端 LLM Router
-      const apiUrl = this.options.apiUrl || '/api/llm/chat';
+      // Phase 3: SSE streaming endpoint
+      const apiUrl = this.options.streamUrl || '/api/llm/stream';
 
       fetch(apiUrl, {
         method: 'POST',
@@ -493,25 +505,88 @@
           class_id: classId
         })
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          this.addMessage(data.data.text, 'bot');
-          this._showFeedback('correct', '✅ 已回答');
-        } else {
-          throw new Error('API error');
-        }
+      .then(res => {
+        if (!res.ok) throw new Error('API error');
+        return this._handleStreamResponse(res);
       })
       .catch(err => {
-        console.warn('[ChatWidget] API unavailable, using fallback:', err.message);
+        console.warn('[ChatWidget] Stream API unavailable, using fallback:', err.message);
         // Fallback to local Q&A
         const response = this._getResponse(message);
         this.addMessage(response, 'bot');
         this._showFeedback('correct', '✅ 已回答');
-      })
-      .finally(() => {
-        setTimeout(() => this._hideFeedback(), 2000);
       });
+    }
+
+    _handleStreamResponse(response) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullResponse = '';
+
+      // 創建 bot 消息元素
+      const messagesDiv = this.options.container.querySelector('#mathai-messages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'mathai-message bot';
+      msgDiv.innerHTML = '<div class="mathai-bubble"></div>';
+      messagesDiv.appendChild(msgDiv);
+
+      const bubble = msgDiv.querySelector('.mathai-bubble');
+
+      // Streaming 指示
+      this._showFeedback('streaming', '✨ 打字中...');
+
+      const readChunk = () => {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            this._showFeedback('correct', '✅ 已回答');
+            return;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          // 處理完整的 SSE 行
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.error) {
+                bubble.textContent = data.message;
+                this._showFeedback('incorrect', '⚠️ 服務異常');
+                return;
+              }
+
+              if (data.token) {
+                fullResponse += data.token;
+                // 打字機效果：每次加一個字符
+                bubble.textContent = fullResponse;
+                // 滾動到底
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+              }
+
+              if (data.done) {
+                this._showFeedback('correct', '✅ 已回答');
+              }
+            } catch (e) {
+              // 非JSON，跳過
+            }
+          }
+
+          if (!done) {
+            readChunk();
+          }
+        }).catch(err => {
+          console.error('[ChatWidget] Stream read error:', err);
+          this._showFeedback('incorrect', '⚠️ 連接錯誤');
+        });
+      };
+
+      readChunk();
     }
 
     _getResponse(input) {

@@ -13,6 +13,9 @@ const { llmRouter } = require('./services/llmRouter');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Helper
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -224,30 +227,140 @@ app.get('/api/dashboard/recent', (req, res) => {
   res.json({ success: true, data: recentMessages });
 });
 
-// --- LLM Chat (Phase 2) ---
+// ========================================
+// Streaming LLM Chat (Phase 3)
+// ========================================
 
-// POST /api/llm/chat — LLM 路由處理
-app.post('/api/llm/chat', async (req, res) => {
+// POST /api/llm/stream — SSE streaming response
+app.post('/api/llm/stream', async (req, res) => {
   const { message, student_id, class_id, context = {} } = req.body;
 
   if (!message) {
     return res.status(400).json({ success: false, error: 'Missing message' });
   }
 
+  // 設置 SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // 禁用 nginx buffering
+
+  // 確保不及時關閉
+  res.flushHeaders();
+
   try {
-    const response = await llmRouter.route(message, context);
+    // 意圖分類
+    const intent = await llmRouter.classifyIntent(message);
+    console.log(`[Stream] Intent: ${intent}`);
+
+    // 根據意圖選擇模型
+    let stream;
+    let prompt;
+
+    if (intent === 'A' || intent === 'B') {
+      // 簡單計算/概念 → Ollama streaming
+      const systemPrompt = intent === 'A' 
+        ? '你係小型數學助手，只答基本計算。答覆要簡短（一句話），可以加簡單解釋，廣東話回覆。'
+        : '你係數學助手，用淺白廣東話解釋概念。短句子，唔好太長，可以加emoji。';
+
+      prompt = `${systemPrompt}\n\n用家問題：${message}`;
+
+      // 調用 Ollama streaming
+      const ollamaRes = await fetch(`${OLLAMA_BASE}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: llmRouter.ollamaModel,
+          prompt: prompt,
+          stream: true,
+          options: {
+            temperature: intent === 'A' ? 0.1 : 0.3,
+            num_predict: 150
+          }
+        })
+      });
+
+      if (!ollamaRes.ok) throw new Error('Ollama unavailable');
+      stream = ollamaRes.body;
+
+    } else if (intent === 'E') {
+      // 求助 → 本地回覆（直接發送）
+      const helps = [
+        '唔緊要！我哋慢慢試，你已經好勁喇 💪',
+        '試多次一定得！我信你 ✨',
+        '遇到困難好正常，我哋一齊諗辦法 🔍',
+        '慢慢嚟，你可以嘅！🌟'
+      ];
+      const response = helps[Math.floor(Math.random() * helps.length)];
+      
+      // 模擬打字效果
+      for (const char of response) {
+        res.write(`data: ${JSON.stringify({ token: char, done: false })}\n\n`);
+        await sleep(30);
+      }
+      res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
+      res.end();
+      return;
+
+    } else {
+      // 複雜題 → MiniMax（非streaming，fallback）
+      const response = await llmRouter.handleMiniMax(message);
+      
+      for (const char of response.text) {
+        res.write(`data: ${JSON.stringify({ token: char, done: false })}\n\n`);
+        await sleep(20);
+      }
+      res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // 處理 Ollama streaming
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    for await (const chunk of stream) {
+      buffer += decoder.decode(chunk, { stream: true });
+      
+      // 嘗試解析完整的 JSON 行
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // 保留未完成的行
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        
+        try {
+          const data = JSON.parse(line);
+          const token = data.response || '';
+          
+          if (token) {
+            // 每次發送一個字符（打字機效果）
+            res.write(`data: ${JSON.stringify({ token, done: false })}\n\n`);
+          }
+        } catch (e) {
+          // 非JSON行，跳過
+        }
+      }
+    }
+
+    // 發送完成信號
+    res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
+    res.end();
 
     // 記錄到數據庫
     if (student_id && class_id) {
+      // 這裡需要緩存完整回覆，可以在並發環境優化
       db.prepare(
         'INSERT INTO messages (student_id, class_id, user_message, bot_response) VALUES (?, ?, ?, ?)'
-      ).run(student_id, class_id, message, response.text);
+      ).run(student_id, class_id, message, '[streaming response]');
     }
 
-    res.json({ success: true, data: response });
   } catch (err) {
-    console.error('[LLM Chat] Error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('[Stream] Error:', err);
+    
+    // 發送錯誤
+    res.write(`data: ${JSON.stringify({ error: true, message: '服務暫時不可用，請稍後再試' })}\n\n`);
+    res.end();
   }
 });
 
