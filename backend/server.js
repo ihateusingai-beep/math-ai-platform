@@ -2,6 +2,7 @@
  * MathAI Platform — Backend Server
  * Phase 1: 純靜態Mock數據，後期接入LLM Router
  * Phase 2: LLM Router Service
+ * Phase 3: SSE Streaming + Teacher Intervention
  */
 
 const express = require('express');
@@ -51,6 +52,8 @@ db.exec(`
     user_message TEXT NOT NULL,
     bot_response TEXT NOT NULL,
     is_help_request INTEGER DEFAULT 0,
+    is_intervention INTEGER DEFAULT 0,
+    resolved INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id),
     FOREIGN KEY (class_id) REFERENCES classes(id)
@@ -133,7 +136,6 @@ app.get('/api/students/:id', (req, res) => {
     return res.status(404).json({ success: false, error: 'Student not found' });
   }
 
-  // 獲取最近消息
   const messages = db.prepare(
     'SELECT * FROM messages WHERE student_id = ? ORDER BY created_at DESC LIMIT 20'
   ).all(req.params.id);
@@ -195,7 +197,6 @@ app.get('/api/dashboard/stats', (req, res) => {
   const totalMessages = db.prepare('SELECT COUNT(*) as count FROM messages').get().count;
   const helpRequests = db.prepare('SELECT COUNT(*) as count FROM messages WHERE is_help_request = 1').get().count;
 
-  // 計算今日統計
   const today = new Date().toISOString().split('T')[0];
   const todayMessages = db.prepare(
     "SELECT COUNT(*) as count FROM messages WHERE date(created_at) = ?"
@@ -231,6 +232,8 @@ app.get('/api/dashboard/recent', (req, res) => {
 // Streaming LLM Chat (Phase 3)
 // ========================================
 
+const OLLAMA_BASE = process.env.OLLAMA_BASE || 'http://localhost:11434';
+
 // POST /api/llm/stream — SSE streaming response
 app.post('/api/llm/stream', async (req, res) => {
   const { message, student_id, class_id, context = {} } = req.body;
@@ -243,9 +246,8 @@ app.post('/api/llm/stream', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // 禁用 nginx buffering
+  res.setHeader('X-Accel-Buffering', 'no');
 
-  // 確保不及時關閉
   res.flushHeaders();
 
   try {
@@ -253,9 +255,8 @@ app.post('/api/llm/stream', async (req, res) => {
     const intent = await llmRouter.classifyIntent(message);
     console.log(`[Stream] Intent: ${intent}`);
 
-    // 根據意圖選擇模型
     let stream;
-    let prompt;
+    let fullResponse = '';
 
     if (intent === 'A' || intent === 'B') {
       // 簡單計算/概念 → Ollama streaming
@@ -263,15 +264,12 @@ app.post('/api/llm/stream', async (req, res) => {
         ? '你係小型數學助手，只答基本計算。答覆要簡短（一句話），可以加簡單解釋，廣東話回覆。'
         : '你係數學助手，用淺白廣東話解釋概念。短句子，唔好太長，可以加emoji。';
 
-      prompt = `${systemPrompt}\n\n用家問題：${message}`;
-
-      // 調用 Ollama streaming
       const ollamaRes = await fetch(`${OLLAMA_BASE}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: llmRouter.ollamaModel,
-          prompt: prompt,
+          prompt: `${systemPrompt}\n\n用家問題：${message}`,
           stream: true,
           options: {
             temperature: intent === 'A' ? 0.1 : 0.3,
@@ -284,7 +282,7 @@ app.post('/api/llm/stream', async (req, res) => {
       stream = ollamaRes.body;
 
     } else if (intent === 'E') {
-      // 求助 → 本地回覆（直接發送）
+      // 求助 → 本地回覆
       const helps = [
         '唔緊要！我哋慢慢試，你已經好勁喇 💪',
         '試多次一定得！我信你 ✨',
@@ -293,7 +291,6 @@ app.post('/api/llm/stream', async (req, res) => {
       ];
       const response = helps[Math.floor(Math.random() * helps.length)];
       
-      // 模擬打字效果
       for (const char of response) {
         res.write(`data: ${JSON.stringify({ token: char, done: false })}\n\n`);
         await sleep(30);
@@ -303,10 +300,11 @@ app.post('/api/llm/stream', async (req, res) => {
       return;
 
     } else {
-      // 複雜題 → MiniMax（非streaming，fallback）
-      const response = await llmRouter.handleMiniMax(message);
+      // 複雜題 → MiniMax/DeepSeek/Qwen（非streaming）
+      const response = await llmRouter.route(message, context);
+      fullResponse = response.text;
       
-      for (const char of response.text) {
+      for (const char of fullResponse) {
         res.write(`data: ${JSON.stringify({ token: char, done: false })}\n\n`);
         await sleep(20);
       }
@@ -322,9 +320,8 @@ app.post('/api/llm/stream', async (req, res) => {
     for await (const chunk of stream) {
       buffer += decoder.decode(chunk, { stream: true });
       
-      // 嘗試解析完整的 JSON 行
       const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // 保留未完成的行
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
         if (!line.trim()) continue;
@@ -334,7 +331,7 @@ app.post('/api/llm/stream', async (req, res) => {
           const token = data.response || '';
           
           if (token) {
-            // 每次發送一個字符（打字機效果）
+            fullResponse += token;
             res.write(`data: ${JSON.stringify({ token, done: false })}\n\n`);
           }
         } catch (e) {
@@ -343,24 +340,95 @@ app.post('/api/llm/stream', async (req, res) => {
       }
     }
 
-    // 發送完成信號
     res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
     res.end();
 
     // 記錄到數據庫
     if (student_id && class_id) {
-      // 這裡需要緩存完整回覆，可以在並發環境優化
       db.prepare(
         'INSERT INTO messages (student_id, class_id, user_message, bot_response) VALUES (?, ?, ?, ?)'
-      ).run(student_id, class_id, message, '[streaming response]');
+      ).run(student_id, class_id, message, fullResponse || '[streaming]');
     }
 
   } catch (err) {
     console.error('[Stream] Error:', err);
     
-    // 發送錯誤
     res.write(`data: ${JSON.stringify({ error: true, message: '服務暫時不可用，請稍後再試' })}\n\n`);
     res.end();
+  }
+});
+
+// ========================================
+// Teacher Intervention (Phase 3)
+// ========================================
+
+// POST /api/intervention — 老師直接回覆學生
+app.post('/api/intervention', (req, res) => {
+  const { student_id, class_id, teacher_message } = req.body;
+
+  if (!student_id || !class_id || !teacher_message) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+
+  try {
+    const result = db.prepare(
+      'INSERT INTO messages (student_id, class_id, user_message, bot_response, is_intervention) VALUES (?, ?, ?, ?, 1)'
+    ).run(student_id, class_id, teacher_message, '[老師回覆]');
+
+    res.json({ 
+      success: true, 
+      data: { 
+        id: result.lastInsertRowid,
+        message: '老師回覆已發送'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/interventions/:student_id — 獲取某學生的老師干預歷史
+app.get('/api/interventions/:student_id', (req, res) => {
+  try {
+    const interventions = db.prepare(
+      'SELECT * FROM messages WHERE student_id = ? AND is_intervention = 1 ORDER BY created_at DESC'
+    ).all(req.params.student_id);
+
+    res.json({ success: true, data: interventions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/help-requests — 獲取所有待處理求助
+app.get('/api/help-requests', (req, res) => {
+  try {
+    const requests = db.prepare(`
+      SELECT m.*, s.name as student_name, c.name as class_name
+      FROM messages m
+      JOIN students s ON m.student_id = s.id
+      JOIN classes c ON m.class_id = c.id
+      WHERE m.is_help_request = 1 AND m.resolved = 0
+      ORDER BY m.created_at DESC
+      LIMIT 50
+    `).all();
+
+    res.json({ success: true, data: requests });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/help-requests/:id/resolve — 標記求助已處理
+app.post('/api/help-requests/:id/resolve', (req, res) => {
+  try {
+    db.prepare(
+      'UPDATE messages SET resolved = 1 WHERE id = ? AND is_help_request = 1'
+    ).run(req.params.id);
+
+    res.json({ success: true, message: '求助已標記為處理' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -372,7 +440,6 @@ app.post('/api/help', (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing required fields' });
   }
 
-  // 記錄為一條特殊訊息
   try {
     db.prepare(
       'INSERT INTO messages (student_id, class_id, user_message, bot_response, is_help_request) VALUES (?, ?, ?, ?, 1)'

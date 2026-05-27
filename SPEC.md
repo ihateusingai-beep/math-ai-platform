@@ -250,6 +250,6 @@ MINIMAX_API_KEY=你的key
 - [x] Dashboard API integration + polling ✅
 - [x] Student detail page ✅
 - [x] Ollama SSE streaming (typing effect) ✅
+- [x] DeepSeek + Qwen backup ✅
+- [x] Teacher Intervention API ✅
 - [ ] MiniMax 圖像生成（math image cards）
-- [ ] DeepSeek/Qwen backup
-- [ ] 老師干預 API（老師可直接回覆學生）
