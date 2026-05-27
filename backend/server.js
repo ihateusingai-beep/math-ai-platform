@@ -1,8 +1,10 @@
 /**
  * MathAI Platform — Backend Server
- * Phase 1: 純靜態Mock數據，後期接入LLM Router
- * Phase 2: LLM Router Service
- * Phase 3: SSE Streaming + Teacher Intervention
+ * Phase 5: Student Identity Hybrid Mode
+ * - Ollama + MiniMax + DeepSeek + Qwen LLM Router
+ * - SSE Streaming + Teacher Intervention
+ * - Hybrid student identity: account-based (high) + class-link (medium/mild)
+ * - Session tracking + Class management + Invite codes
  */
 
 const express = require('express');
