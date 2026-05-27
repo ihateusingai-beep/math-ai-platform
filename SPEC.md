@@ -253,4 +253,4 @@ MINIMAX_API_KEY=你的key
 - [x] DeepSeek + Qwen backup ✅
 - [x] Teacher Intervention API ✅
 - [x] MiniMax 圖像生成 (imageGenerator.js) ✅
-- [ ] 圖卡顯示優化（ChatWidget 顯示圖像）
+- [x] 圖卡自動檢測 + 顯示 ✅
