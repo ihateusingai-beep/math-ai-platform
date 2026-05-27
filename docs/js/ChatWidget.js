@@ -589,6 +589,28 @@
       readChunk();
     }
 
+    // ========================================
+    // 獲取圖卡（Phase 4）
+    // ========================================
+    async _fetchImageCard(type, userMessage) {
+      try {
+        const res = await fetch('/api/image/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, user_message: userMessage })
+        });
+
+        const data = await res.json();
+        
+        if (data.success && data.data.url) {
+          return data.data.url;
+        }
+      } catch (err) {
+        console.warn('[ChatWidget] Image gen failed:', err.message);
+      }
+      return null;
+    }
+
     _getResponse(input) {
       const lower = input.toLowerCase().replace(/\s+/g, '');
 

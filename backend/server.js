@@ -10,6 +10,7 @@ const cors = require('cors');
 const Database = require('better-sqlite3');
 const path = require('path');
 const { llmRouter } = require('./services/llmRouter');
+const { imageGenerator } = require('./services/imageGenerator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -449,6 +450,52 @@ app.post('/api/help', (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// ========================================
+// Image Generation (Phase 4)
+// ========================================
+
+// POST /api/image/generate — 生成數學圖卡
+app.post('/api/image/generate', async (req, res) => {
+  const { type, custom_prompt, user_message } = req.body;
+
+  try {
+    let result;
+
+    if (user_message && !type) {
+      // 自動從用家消息判斷類型
+      result = await imageGenerator.autoGenerate(user_message);
+    } else {
+      // 指定類型
+      result = await imageGenerator.generateCard(type, custom_prompt);
+    }
+
+    if (result.url) {
+      res.json({ success: true, data: { url: result.url, cached: result.cached } });
+    } else {
+      res.status(500).json({ success: false, error: 'Image generation failed' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/image/types — 獲取可用類型
+app.get('/api/image/types', (req, res) => {
+  const types = [
+    { id: 'triangle', label: '三角形', desc: '認識三角形' },
+    { id: 'square', label: '正方形', desc: '認識正方形' },
+    { id: 'circle', label: '圓形', desc: '認識圓形' },
+    { id: 'addition', label: '加法', desc: '加法圖解' },
+    { id: 'subtraction', label: '減法', desc: '減法圖解' },
+    { id: 'multiplication', label: '乘法', desc: '乘法圖解' },
+    { id: 'division', label: '除法', desc: '除法圖解' },
+    { id: 'clock', label: '時鐘', desc: '認識時間' },
+    { id: 'money', label: '金錢', desc: '認識金錢' }
+  ];
+
+  res.json({ success: true, data: types });
 });
 
 // ========================================

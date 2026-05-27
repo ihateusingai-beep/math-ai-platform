@@ -252,4 +252,5 @@ MINIMAX_API_KEY=你的key
 - [x] Ollama SSE streaming (typing effect) ✅
 - [x] DeepSeek + Qwen backup ✅
 - [x] Teacher Intervention API ✅
-- [ ] MiniMax 圖像生成（math image cards）
+- [x] MiniMax 圖像生成 (imageGenerator.js) ✅
+- [ ] 圖卡顯示優化（ChatWidget 顯示圖像）
