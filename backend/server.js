@@ -34,6 +34,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
+    invite_code TEXT UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -42,6 +43,8 @@ db.exec(`
     name TEXT NOT NULL,
     class_id TEXT NOT NULL,
     ability TEXT DEFAULT 'medium',
+    has_account INTEGER DEFAULT 0,
+    password_hash TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (class_id) REFERENCES classes(id)
   );
@@ -56,6 +59,17 @@ db.exec(`
     is_intervention INTEGER DEFAULT 0,
     resolved INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (class_id) REFERENCES classes(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    student_id TEXT NOT NULL,
+    class_id TEXT NOT NULL,
+    started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
+    message_count INTEGER DEFAULT 0,
     FOREIGN KEY (student_id) REFERENCES students(id),
     FOREIGN KEY (class_id) REFERENCES classes(id)
   );
@@ -496,6 +510,290 @@ app.get('/api/image/types', (req, res) => {
   ];
 
   res.json({ success: true, data: types });
+});
+
+// ========================================
+// Phase 5: Class Management + Student Identity
+// ========================================
+
+// Utility: generate random invite code
+const generateInviteCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return code;
+};
+
+// POST /api/classes — Create new class with invite code
+app.post('/api/classes', (req, res) => {
+  const { name, description } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ success: false, error: 'Missing name' });
+  }
+
+  const id = name.toLowerCase().replace(/\s+/g, '') + Date.now().toString(36);
+  const invite_code = generateInviteCode();
+
+  try {
+    db.prepare('INSERT INTO classes (id, name, description, invite_code) VALUES (?, ?, ?, ?)')
+      .run(id, name, description || '', invite_code);
+
+    res.json({ success: true, data: { id, name, description, invite_code } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/classes/:id — Update class
+app.put('/api/classes/:id', (req, res) => {
+  const { name, description } = req.body;
+
+  try {
+    const updates = [];
+    const params = [];
+    if (name) { updates.push('name = ?'); params.push(name); }
+    if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, error: 'No fields to update' });
+    }
+
+    params.push(req.params.id);
+    db.prepare(`UPDATE classes SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+
+    res.json({ success: true, message: 'Class updated' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/classes/:id — Delete class
+app.delete('/api/classes/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM messages WHERE class_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM sessions WHERE class_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM students WHERE class_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM classes WHERE id = ?').run(req.params.id);
+
+    res.json({ success: true, message: 'Class deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/classes/by-code — Find class by invite code
+app.post('/api/classes/by-code', (req, res) => {
+  const { invite_code } = req.body;
+
+  if (!invite_code) {
+    return res.status(400).json({ success: false, error: 'Missing invite_code' });
+  }
+
+  try {
+    const classInfo = db.prepare('SELECT * FROM classes WHERE invite_code = ?').get(invite_code.toUpperCase());
+
+    if (!classInfo) {
+      return res.status(404).json({ success: false, error: 'Invalid invite code' });
+    }
+
+    // Get students (no password for class-link students)
+    const students = db.prepare(
+      'SELECT id, name, ability FROM students WHERE class_id = ? ORDER BY name'
+    ).all(classInfo.id);
+
+    res.json({ success: true, data: { ...classInfo, students } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/students — Create/update student
+app.post('/api/students', (req, res) => {
+  const { id, name, class_id, ability = 'medium', has_account = 0, password } = req.body;
+
+  if (!id || !name || !class_id) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+
+  try {
+    const password_hash = password ? require('crypto').createHash('sha256').update(password).digest('hex') : null;
+
+    db.prepare(
+      'INSERT OR REPLACE INTO students (id, name, class_id, ability, has_account, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, name, class_id, ability, has_account ? 1 : 0, password_hash);
+
+    res.json({ success: true, data: { id, name, class_id, ability, has_account } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/students/batch — Batch create students (teacher preset list)
+app.post('/api/students/batch', (req, res) => {
+  const { students, class_id } = req.body;
+
+  if (!students || !class_id || !Array.isArray(students)) {
+    return res.status(400).json({ success: false, error: 'Missing students array or class_id' });
+  }
+
+  try {
+    const insert = db.prepare(
+      'INSERT OR REPLACE INTO students (id, name, class_id, ability, has_account) VALUES (?, ?, ?, ?, 0)'
+    );
+
+    const insertMany = db.transaction((items) => {
+      for (const s of items) {
+        insert.run(s.id, s.name, class_id, s.ability || 'medium');
+      }
+    });
+
+    insertMany(students);
+
+    res.json({ success: true, count: students.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/auth/login — Student login (account-based)
+app.post('/api/auth/login', (req, res) => {
+  const { student_id, password } = req.body;
+
+  if (!student_id || !password) {
+    return res.status(400).json({ success: false, error: 'Missing credentials' });
+  }
+
+  try {
+    const student = db.prepare('SELECT * FROM students WHERE id = ? AND has_account = 1').get(student_id);
+
+    if (!student) {
+      return res.status(401).json({ success: false, error: 'Account not found' });
+    }
+
+    const hash = require('crypto').createHash('sha256').update(password).digest('hex');
+    if (student.password_hash !== hash) {
+      return res.status(401).json({ success: false, error: 'Invalid password' });
+    }
+
+    // Create session
+    const session_id = require('crypto').randomUUID();
+    db.prepare(
+      'INSERT INTO sessions (id, student_id, class_id) VALUES (?, ?, ?)'
+    ).run(session_id, student_id, student.class_id);
+
+    res.json({
+      success: true,
+      data: {
+        session_id,
+        student: { id: student.id, name: student.name, class_id: student.class_id, ability: student.ability }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/auth/guest — Guest login (class-link)
+app.post('/api/auth/guest', (req, res) => {
+  const { student_id, class_id } = req.body;
+
+  if (!student_id || !class_id) {
+    return res.status(400).json({ success: false, error: 'Missing student_id or class_id' });
+  }
+
+  try {
+    const student = db.prepare('SELECT * FROM students WHERE id = ? AND class_id = ?').get(student_id, class_id);
+
+    if (!student) {
+      return res.status(404).json({ success: false, error: 'Student not found in class' });
+    }
+
+    // Create session
+    const session_id = require('crypto').randomUUID();
+    db.prepare(
+      'INSERT INTO sessions (id, student_id, class_id) VALUES (?, ?, ?)'
+    ).run(session_id, student_id, class_id);
+
+    res.json({
+      success: true,
+      data: {
+        session_id,
+        student: { id: student.id, name: student.name, class_id: student.class_id, ability: student.ability }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/auth/logout — End session
+app.post('/api/auth/logout', (req, res) => {
+  const { session_id } = req.body;
+
+  if (session_id) {
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(session_id);
+  }
+
+  res.json({ success: true });
+});
+
+// GET /api/sessions/:id — Get session info
+app.get('/api/sessions/:id', (req, res) => {
+  try {
+    const session = db.prepare(
+      `SELECT s.*, st.name as student_name, c.name as class_name
+       FROM sessions s
+       JOIN students st ON s.student_id = st.id
+       JOIN classes c ON s.class_id = c.id
+       WHERE s.id = ?`
+    ).get(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({ success: false, error: 'Session not found' });
+    }
+
+    res.json({ success: true, data: session });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/sessions/:id/heartbeat — Update session activity
+app.post('/api/sessions/:id/heartbeat', (req, res) => {
+  try {
+    db.prepare(
+      'UPDATE sessions SET last_active = CURRENT_TIMESTAMP, message_count = message_count + 1 WHERE id = ?'
+    ).run(req.params.id);
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/classes/:id/stats — Class usage stats
+app.get('/api/classes/:id/stats', (req, res) => {
+  try {
+    const classInfo = db.prepare('SELECT * FROM classes WHERE id = ?').get(req.params.id);
+    const studentCount = db.prepare('SELECT COUNT(*) as count FROM students WHERE class_id = ?').get(req.params.id).count;
+    const activeSessions = db.prepare('SELECT COUNT(*) as count FROM sessions WHERE class_id = ?').get(req.params.id).count;
+    const todayMessages = db.prepare(
+      "SELECT COUNT(*) as count FROM messages WHERE class_id = ? AND date(created_at) = date('now')"
+    ).get(req.params.id).count;
+
+    res.json({
+      success: true,
+      data: {
+        class: classInfo,
+        studentCount,
+        activeSessions,
+        todayMessages
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // ========================================

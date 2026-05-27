@@ -40,214 +40,257 @@
       font-size: 24px;
     }
 
-    .chat-user-name {
-      font-size: 20px;
-      font-weight: bold;
+    .chat-user-details h2 {
+      font-size: 18px;
+      font-weight: 700;
     }
 
-    .chat-user-class {
-      font-size: 14px;
-      opacity: 0.8;
+    .chat-user-details p {
+      font-size: 13px;
+      opacity: 0.85;
     }
 
-    .chat-back-btn {
+    .chat-header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-btn {
       background: rgba(255,255,255,0.2);
-      color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: var(--radius-xl);
-      font-size: 16px;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       cursor: pointer;
-      text-decoration: none;
+      font-size: 18px;
       transition: background 0.2s;
     }
 
-    .chat-back-btn:hover {
+    .header-btn:hover {
       background: rgba(255,255,255,0.3);
     }
 
     .chat-main {
       flex: 1;
       display: flex;
-      align-items: center;
       justify-content: center;
       padding: 20px;
-      background: var(--bg-light);
+      background: #f5f7fa;
     }
 
     .chat-widget-container {
       width: 100%;
-      max-width: 700px;
+      max-width: 600px;
     }
 
     .chat-help-btn {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: 64px;
-      height: 64px;
-      background: var(--warning);
-      color: var(--text-dark);
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+      color: white;
       border: none;
       border-radius: 50%;
       font-size: 28px;
       cursor: pointer;
-      box-shadow: var(--shadow-lg);
-      transition: all 0.2s;
-      z-index: 100;
+      box-shadow: 0 4px 20px rgba(255,107,107,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .chat-help-btn:hover {
       transform: scale(1.1);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+      box-shadow: 0 6px 24px rgba(255,107,107,0.5);
     }
 
-    .help-modal {
-      display: none;
+    /* Help Modal */
+    .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0,0,0,0.5);
-      z-index: 200;
+      display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
     }
 
-    .help-modal.show {
-      display: flex;
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
     }
 
-    .help-modal-content {
+    .modal-content {
       background: white;
-      border-radius: var(--radius-lg);
+      border-radius: 20px;
       padding: 32px;
-      max-width: 500px;
       width: 90%;
+      max-width: 400px;
       text-align: center;
     }
 
-    .help-modal-title {
-      font-size: 24px;
-      font-weight: bold;
+    .modal-content h3 {
+      font-size: 22px;
       margin-bottom: 16px;
+      color: #333;
     }
 
-    .help-modal-text {
-      font-size: 18px;
-      color: var(--text-muted);
+    .modal-content p {
+      color: #666;
       margin-bottom: 24px;
     }
 
-    .help-modal-actions {
+    .modal-btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0 8px;
+    }
+
+    .modal-btn.primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .modal-btn.secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.95);
       display: flex;
-      gap: 12px;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
+      z-index: 2000;
+    }
+
+    .loading-overlay .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #f0f0f0;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+  <!-- Loading -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <p>載入中...</p>
+  </div>
+
   <div class="chat-page">
-    <!-- Header -->
     <header class="chat-header">
       <div class="chat-user-info">
         <div class="chat-user-avatar">👤</div>
-        <div>
-          <div class="chat-user-name" id="student-name">張鈞保</div>
-          <div class="chat-user-class" id="student-class">P1A 數學班</div>
+        <div class="chat-user-details">
+          <h2 id="student-name">載入中...</h2>
+          <p id="student-class">-</p>
         </div>
       </div>
-      <a href="javascript:history.back()" class="chat-back-btn">← 返回</a>
+      <div class="chat-header-actions">
+        <button class="header-btn" id="logout-btn" title="登出">🚪</button>
+      </div>
     </header>
 
-    <!-- Chat Widget -->
     <main class="chat-main">
       <div class="chat-widget-container">
         <div id="chat-widget-mount"></div>
       </div>
     </main>
 
-    <!-- Help Button -->
     <button class="chat-help-btn" id="help-btn" title="需要幫助？">❓</button>
 
     <!-- Help Modal -->
-    <div class="help-modal" id="help-modal">
-      <div class="help-modal-content">
-        <div class="help-modal-title">🎓 需要老師幫助？</div>
-        <p class="help-modal-text">老師會立即知道你想求助</p>
-        <div class="help-modal-actions">
-          <button class="btn btn-primary btn-lg" id="call-teacher-btn">叫老師幫我 ✓</button>
-          <button class="btn btn-secondary btn-lg" id="close-help-btn">繼續自己試</button>
-        </div>
+    <div class="modal-overlay" id="help-modal">
+      <div class="modal-content">
+        <h3>🚨 需要老師幫忙？</h3>
+        <p>老師會即時收到通知，馬上來幫你！</p>
+        <button class="modal-btn primary" id="call-teacher-btn">係，叫老師幫我！</button>
+        <button class="modal-btn secondary" id="close-help-btn">我可以自己試</button>
       </div>
     </div>
   </div>
 
-  <!-- ChatWidget Script -->
   <script src="../js/ChatWidget.js"></script>
   <script>
     // ========================================
-    // URL 參數獲取學生信息
+    // Phase 5: Session-based Auth
     // ========================================
-    const params = new URLSearchParams(window.location.search);
-    const studentId = params.get('student') || 'p1a-01';
-    const classId = params.get('class') || 'P1A';
+
+    const session = localStorage.getItem('mathai_session');
+    const student = JSON.parse(localStorage.getItem('mathai_student') || 'null');
+    const mode = localStorage.getItem('mathai_mode') || 'guest';
+
+    if (!session || !student) {
+      window.location.href = '/pages/login.html';
+      throw new Error('No session');
+    }
+
+    // Remove loading
+    document.getElementById('loading').style.display = 'none';
+
+    // Update header
+    document.getElementById('student-name').textContent = student.name;
+    document.getElementById('student-class').textContent = `${student.class_id} 數學班`;
 
     // ========================================
-    // Mock 學生名單（後期從API獲取）
-    // ========================================
-    const STUDENTS_BY_CLASS = {
-      'P1A': [
-        { id: 'p1a-01', name: '張鈞保', ability: 'high' },
-        { id: 'p1a-02', name: '陳大文', ability: 'medium' },
-        { id: 'p1a-03', name: '李小红', ability: 'medium' },
-        { id: 'p1a-04', name: '王小明', ability: 'low' },
-        { id: 'p1a-05', name: '陳志明', ability: 'medium' }
-      ],
-      'P2A': [
-        { id: 'p2a-01', name: '周芷若', ability: 'high' },
-        { id: 'p2a-02', name: '吳俊傑', ability: 'medium' },
-        { id: 'p2a-03', name: '孫文斌', ability: 'medium' },
-        { id: 'p2a-04', name: '鄭凱文', ability: 'low' },
-        { id: 'p2a-05', name: '何美琪', ability: 'medium' }
-      ],
-      'S1B': [
-        { id: 's1b-01', name: '祝卓鋒', ability: 'high' },
-        { id: 's1b-02', name: '黃曉明', ability: 'medium' },
-        { id: 's1b-03', name: '林志玲', ability: 'medium' },
-        { id: 's1b-04', name: '張偉豪', ability: 'low' },
-        { id: 's1b-05', name: '劉德華', ability: 'medium' }
-      ]
-    };
-
-    // 查找當前學生
-    const students = STUDENTS_BY_CLASS[classId] || [];
-    const currentStudent = students.find(s => s.id === studentId) || students[0];
-
-    // 更新 header
-    document.getElementById('student-name').textContent = currentStudent.name;
-    document.getElementById('student-class').textContent = `${classId} 數學班`;
-
-    // ========================================
-    // 初始化 ChatWidget
+    // Init ChatWidget with session identity
     // ========================================
     const mountEl = document.getElementById('chat-widget-mount');
     const chatWidget = new MathAI.ChatWidget({
       container: mountEl,
-      studentName: currentStudent.name,
-      studentId: studentId,       // Phase 2: 傳到後端
-      classId: classId,           // Phase 2: 傳到後端
-      streamUrl: '/api/llm/stream', // Phase 3: SSE streaming endpoint
+      studentId: student.id,
+      studentName: student.name,
+      classId: student.class_id,
+      ability: student.ability || 'medium',
+      streamUrl: '/api/llm/stream',
       voiceEnabled: true,
       onMessage: (userMsg, botMsg) => {
-        // Phase 2: 發送到後端記錄
-        console.log('Message logged:', { studentId, userMsg, botMsg });
+        // Send heartbeat with message count increment
+        fetch(`/api/sessions/${session}/heartbeat`, { method: 'POST' }).catch(() => {});
       }
     });
 
     // ========================================
-    // Help Modal 控制
+    // Logout
+    // ========================================
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: session })
+        });
+      } catch (e) {}
+
+      localStorage.removeItem('mathai_session');
+      localStorage.removeItem('mathai_student');
+      localStorage.removeItem('mathai_mode');
+      window.location.href = '/pages/login.html';
+    });
+
+    // ========================================
+    // Help Modal
     // ========================================
     const helpBtn = document.getElementById('help-btn');
     const helpModal = document.getElementById('help-modal');
@@ -256,8 +299,6 @@
 
     helpBtn.addEventListener('click', () => {
       helpModal.classList.add('show');
-
-      // 語音提示
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance('你想叫老師幫你嗎？');
         utterance.lang = 'zh-HK';
@@ -269,32 +310,23 @@
       helpModal.classList.remove('show');
     });
 
-    callTeacherBtn.addEventListener('click', () => {
-      // Phase 2: 發送求助信號到後端
-      alert('老師會立即收到通知！');
+    callTeacherBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/help', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: student.id, class_id: student.class_id })
+        });
+      } catch (e) {}
+
       helpModal.classList.remove('show');
-
-      // 實際實現會發送到 server
-      console.log('Teacher called for:', currentStudent.name);
+      alert('✅ 老師已收到通知！');
     });
 
-    // 點擊背景關閉
-    helpModal.addEventListener('click', (e) => {
-      if (e.target === helpModal) {
-        helpModal.classList.remove('show');
-      }
-    });
-
-    // ========================================
-    // 頁面卸載時保存 session
-    // ========================================
-    window.addEventListener('beforeunload', () => {
-      sessionStorage.setItem('mathai_student', JSON.stringify({
-        studentId,
-        classId,
-        timestamp: Date.now()
-      }));
-    });
+    // Heartbeat every 30s
+    setInterval(() => {
+      fetch(`/api/sessions/${session}/heartbeat`, { method: 'POST' }).catch(() => {});
+    }, 30000);
   </script>
 </body>
 </html>

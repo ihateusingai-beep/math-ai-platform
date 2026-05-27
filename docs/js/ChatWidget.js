@@ -571,6 +571,8 @@
 
               if (data.done) {
                 this._showFeedback('correct', '✅ 已回答');
+                // Phase 4: 自動生成圖卡
+                this._appendImageCard(fullResponse, message);
               }
             } catch (e) {
               // 非JSON，跳過
@@ -587,6 +589,43 @@
       };
 
       readChunk();
+    }
+
+    // ========================================
+    // 自動生成圖卡（Phase 4）
+    // ========================================
+    async _appendImageCard(responseText, userMessage) {
+      // 自動檢測是否應該顯示圖卡
+      const lower = userMessage.toLowerCase();
+      let type = null;
+
+      if (lower.includes('三角形') || lower.includes('三條邊') || lower.includes('3條')) type = 'triangle';
+      else if (lower.includes('正方形') || lower.includes('四個角') || lower.includes('4個')) type = 'square';
+      else if (lower.includes('圓形') || lower.includes('圈')) type = 'circle';
+      else if (lower.includes('加') && !lower.includes('減')) type = 'addition';
+      else if (lower.includes('減')) type = 'subtraction';
+      else if (lower.includes('乘')) type = 'multiplication';
+      else if (lower.includes('除')) type = 'division';
+      else if (lower.includes('時間') || lower.includes('點鐘')) type = 'clock';
+      else if (lower.includes('錢') || lower.includes('蚊') || lower.includes('元')) type = 'money';
+
+      if (!type) return; // 沒有匹配的類型，不顯示圖卡
+
+      // 獲取圖卡URL
+      const imageUrl = await this._fetchImageCard(type, userMessage);
+      
+      if (imageUrl) {
+        const messagesDiv = this.options.container.querySelector('#mathai-messages');
+        
+        // 創建圖卡元素
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'mathai-image-card';
+        cardDiv.innerHTML = `
+          <img src="${imageUrl}" alt="數學圖卡" style="max-width: 200px; border-radius: 12px; margin-top: 8px;" />
+        `;
+        messagesDiv.appendChild(cardDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
     }
 
     // ========================================

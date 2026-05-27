@@ -254,3 +254,8 @@ MINIMAX_API_KEY=你的key
 - [x] Teacher Intervention API ✅
 - [x] MiniMax 圖像生成 (imageGenerator.js) ✅
 - [x] 圖卡自動檢測 + 顯示 ✅
+- [x] Phase 5: Student identity (Hybrid mode) ✅
+  - [x] 帳戶登入 (高能力)
+  - [x] 班級連結 + 邀請碼 (中度/輕度)
+  - [x] 老師批量新增學生
+  - [x] Session tracking
