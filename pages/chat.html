@@ -236,9 +236,7 @@
     const chatWidget = new MathAI.ChatWidget({
       container: mountEl,
       studentName: currentStudent.name,
-      studentId: studentId,   // Phase 2: 傳到後端
-      classId: classId,       // Phase 2: 傳到後端
-      apiUrl: '/api/llm/chat', // Phase 2: LLM Router endpoint
+      classId: classId,
       voiceEnabled: true,
       onMessage: (userMsg, botMsg) => {
         // Phase 2: 發送到後端記錄

@@ -472,19 +472,46 @@
       input.value = '';
 
       // 顯示 loading
-      this._showFeedback('waiting', '諗緊...');
+      this._showFeedback('waiting', '🤔 思考中...');
 
-      // 延遲回覆（模拟思考）
-      setTimeout(() => {
-        const response = this._getResponse(text);
-        this.addMessage(response, 'bot');
-        this._hideFeedback();
+      // 發送到後端
+      this._sendToBackend(text);
+    }
 
-        // 回呼
-        if (this.options.onMessage) {
-          this.options.onMessage(text, response);
+    _sendToBackend(message) {
+      const { studentId = 'guest', classId = 'P1A' } = this.options;
+
+      // Phase 2: 調用後端 LLM Router
+      const apiUrl = this.options.apiUrl || '/api/llm/chat';
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          student_id: studentId,
+          class_id: classId
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          this.addMessage(data.data.text, 'bot');
+          this._showFeedback('correct', '✅ 已回答');
+        } else {
+          throw new Error('API error');
         }
-      }, 800);
+      })
+      .catch(err => {
+        console.warn('[ChatWidget] API unavailable, using fallback:', err.message);
+        // Fallback to local Q&A
+        const response = this._getResponse(message);
+        this.addMessage(response, 'bot');
+        this._showFeedback('correct', '✅ 已回答');
+      })
+      .finally(() => {
+        setTimeout(() => this._hideFeedback(), 2000);
+      });
     }
 
     _getResponse(input) {

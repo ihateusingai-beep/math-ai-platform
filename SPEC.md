@@ -1,4 +1,6 @@
-# Math AI Assistant Platform — Phase 1 Spec
+# Math AI Assistant Platform — Spec
+
+> Phase 1 完成（v1.0）| Phase 2 進行中（v2.0）
 
 ## 定位
 老師監控下的智能數學助教系統，Phase 1 專注「地基」——ChatWidget 拆解。
@@ -212,3 +214,38 @@ Phase 1.2 Dashboard ───┘
 ---
 
 Last updated: 2026-05-27
+
+---
+
+## Phase 2 — LLM Router 接入（v2.0）
+
+### 狀態：進行中 ✅
+
+### LLM Router Service (`backend/services/llmRouter.js`)
+
+**路由邏輯**
+- 意圖分類（Ollama）→ 判斷問題類型
+- 簡單計算（A型）→ Ollama 本地處理
+- 概念問題（B型）→ Ollama 本地處理
+- 複雜應用/創意題（C/D型）→ MiniMax 雲端處理
+- 求助（E型）→ 本地鼓勵回覆
+
+**環境變量**
+```
+OLLAMA_BASE=http://localhost:11434
+MINIMAX_API_KEY=你的key
+```
+
+**API Endpoint**
+- `POST /api/llm/chat` — 接收 message，返回 { text, source }
+
+### ChatWidget 升級
+- 從 Phase 1 的純本地 Q&A → 接入後端 LLM Router
+- API 不可用時自動 fallback 到本地 Q&A
+- student_id / class_id 傳入後端記錄
+
+### 待完成
+- [ ] Ollama 串流回覆（streaming）
+- [ ] MiniMax 圖像生成（math image cards）
+- [ ] DeepSeek/Qwen 作為備用
+- [ ] 老師干預 API（老師可直接回覆學生）

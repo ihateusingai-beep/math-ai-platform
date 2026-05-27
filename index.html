@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MathAI 數學助手 — 匡智張玉瓊晨輝學校</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    .hero {
+      min-height: calc(100vh - 200px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    }
+
+    .hero-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .hero-title {
+      font-size: 48px;
+      font-weight: bold;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+
+    .hero-subtitle {
+      font-size: 20px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      max-width: 600px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .features {
+      padding: 60px 0;
+      background: var(--bg-white);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      text-align: center;
+      padding: 32px 24px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-light);
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .class-section {
+      padding: 60px 0;
+      background: linear-gradient(135deg, #4a90d9, #67b26f);
+      color: white;
+    }
+
+    .class-section h2 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .class-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .class-card:hover {
+      background: rgba(255,255,255,0.25);
+      transform: translateY(-4px);
+    }
+
+    .class-card-icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+
+    .class-card-name {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .class-card-desc {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .how-to {
+      padding: 60px 0;
+    }
+
+    .how-to ol {
+      max-width: 600px;
+      margin: 0 auto;
+      padding-left: 20px;
+    }
+
+    .how-to li {
+      font-size: 18px;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .how-to strong {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <a href="/" class="logo">
+            <span class="logo-icon">🔢</span>
+            <span>MathAI 數學助手</span>
+          </a>
+          <nav class="nav-links">
+            <a href="/pages/dashboard.html">老師版</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-icon">🤖</div>
+      <h1 class="hero-title">MathAI 數學助手</h1>
+      <p class="hero-subtitle">
+        專為匡智張玉瓊晨輝學校同學設計的智能數學助教<br>
+        識幫你答問題，仲會鼓勵你！
+      </p>
+      <div class="hero-actions">
+        <a href="/pages/class-select.html?class=P1A" class="btn btn-primary btn-lg">開始學習 →</a>
+        <a href="/pages/dashboard.html" class="btn btn-secondary btn-lg">老師登入</a>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="container">
+        <h2 style="text-align: center; font-size: 32px; margin-bottom: 40px;">✨ 我可以幫你</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">➕➖</div>
+            <h3 class="feature-title">基本計算</h3>
+            <p class="feature-desc">加、減、乘、除，樣樣都行</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📐</div>
+            <h3 class="feature-title">認識形狀</h3>
+            <p class="feature-desc">三角形、正方形、圓形...</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⏰</div>
+            <h3 class="feature-title">時間概念</h3>
+            <p class="feature-desc">學睇時鐘、計時間</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3 class="feature-title">語音輸入</h3>
+            <p class="feature-desc">得一隻手指都得，掂住講就得</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Class Selection -->
+    <section class="class-section">
+      <div class="container">
+        <h2>選擇你的班級</h2>
+        <div class="class-grid">
+          <a href="/pages/class-select.html?class=P1A" class="class-card">
+            <span class="class-card-icon">📗</span>
+            <span class="class-card-name">P1A</span>
+            <span class="class-card-desc">小一 A 班</span>
+          </a>
+          <a href="/pages/class-select.html?class=P2A" class="class-card">
+            <span class="class-card-icon">📘</span>
+            <span class="class-card-name">P2A</span>
+            <span class="class-card-desc">小二 A 班</span>
+          </a>
+          <a href="/pages/class-select.html?class=S1B" class="class-card">
+            <span class="class-card-icon">📙</span>
+            <span class="class-card-name">S1B</span>
+            <span class="class-card-desc">中一 B 班</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- How to use -->
+    <section class="how-to">
+      <div class="container">
+        <h2 style="text-align: center; font-size: 32px; margin-bottom: 40px;">📖 點樣用？</h2>
+        <ol>
+          <li><strong>選擇班級</strong> → 點擊你嘅班級（如 P1A）</li>
+          <li><strong>選擇名字</strong> → 喺名單入面搵你個名，點擊進入</li>
+          <li><strong>問數學問題</strong> → 打文字或者按住 🎤 講問題</li>
+          <li><strong>得到答案</strong> → 我會幫你解答，仲會鼓勵你！</li>
+        </ol>
+        <p style="text-align: center; margin-top: 24px; color: var(--text-muted);">
+          如果你唔知點做，可以叫老師幫你！
+        </p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        MathAI 數學助手 — 匡智張玉瓊晨輝學校<br>
+        Made with ❤️ for students
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

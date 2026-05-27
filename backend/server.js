@@ -1,12 +1,14 @@
 /**
  * MathAI Platform — Backend Server
  * Phase 1: 純靜態Mock數據，後期接入LLM Router
+ * Phase 2: LLM Router Service
  */
 
 const express = require('express');
 const cors = require('cors');
 const Database = require('better-sqlite3');
 const path = require('path');
+const { llmRouter } = require('./services/llmRouter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -222,12 +224,37 @@ app.get('/api/dashboard/recent', (req, res) => {
   res.json({ success: true, data: recentMessages });
 });
 
-// --- Help Request ---
+// --- LLM Chat (Phase 2) ---
+
+// POST /api/llm/chat — LLM 路由處理
+app.post('/api/llm/chat', async (req, res) => {
+  const { message, student_id, class_id, context = {} } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ success: false, error: 'Missing message' });
+  }
+
+  try {
+    const response = await llmRouter.route(message, context);
+
+    // 記錄到數據庫
+    if (student_id && class_id) {
+      db.prepare(
+        'INSERT INTO messages (student_id, class_id, user_message, bot_response) VALUES (?, ?, ?, ?)'
+      ).run(student_id, class_id, message, response.text);
+    }
+
+    res.json({ success: true, data: response });
+  } catch (err) {
+    console.error('[LLM Chat] Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // POST /api/help — 學生求助
 app.post('/api/help', (req, res) => {
   const { student_id, class_id } = req.body;
-  
+
   if (!student_id || !class_id) {
     return res.status(400).json({ success: false, error: 'Missing required fields' });
   }
