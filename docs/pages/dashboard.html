@@ -468,23 +468,183 @@
     setInterval(poll, 5000);
 
     // ========================================
-    // 初始化
-    // ========================================
-    updateTime();
-    setInterval(updateTime, 60000);
-    renderStudentTable('P1A');
-    renderActivity();
+// Dashboard 初始化（Phase 2: 真實API）
+// ========================================
 
-    // 每5秒更新一次stats（模擬）
-    setInterval(() => {
-      const students = document.querySelectorAll('.stat-info h3');
-      // 隨機微微增加（模擬活躍）
-      const random = Math.floor(Math.random() * 3);
-      const current = parseInt(students[0].textContent);
-      if (current < 20) {
-        students[0].textContent = current + (Math.random() > 0.5 ? 1 : 0);
-      }
-    }, 5000);
+const API_BASE = ''; // 相對路徑，生產環境改為實際URL
+
+// ========================================
+// 獲取真實數據
+// ========================================
+async function fetchDashboardData() {
+  try {
+    const [statsRes, recentRes] = await Promise.all([
+      fetch(`${API_BASE}/api/dashboard/stats`),
+      fetch(`${API_BASE}/api/dashboard/recent`)
+    ]);
+
+    const stats = await statsRes.json();
+    const recent = await recentRes.json();
+
+    if (stats.success) {
+      updateStats(stats.data);
+    }
+
+    if (recent.success) {
+      renderActivity(recent.data);
+    }
+  } catch (err) {
+    console.warn('[Dashboard] API unavailable, using mock data');
+  }
+}
+
+function updateStats(data) {
+  document.getElementById('stat-students').textContent = data.totalStudents;
+  document.getElementById('stat-messages').textContent = data.todayMessages;
+  document.getElementById('stat-accuracy').textContent = 
+    data.totalMessages > 0 ? Math.round(((data.totalMessages - data.helpRequests) / data.totalMessages) * 100) + '%' : '0%';
+  document.getElementById('stat-classes').textContent = data.activeClasses;
+}
+
+function renderActivity(data) {
+  const list = document.getElementById('activity-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-muted);text-align:center;">暫時冇活動記錄</p>';
+    return;
+  }
+
+  list.innerHTML = `
+    <table class="table">
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>學生</th>
+          <th>班級</th>
+          <th>動作</th>
+          <th>結果</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(a => `
+          <tr>
+            <td>${new Date(a.created_at).toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })}</td>
+            <td>${a.student_name}</td>
+            <td>${a.class_name}</td>
+            <td>${a.is_help_request ? '🚨 求助' : '💬 提問'}</td>
+            <td>${a.is_help_request ? '⚠️ 待處理' : '✅ 已回覆'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ========================================
+// 獲取班級學生列表（從真實API）
+// ========================================
+async function fetchClassStudents(classId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/classes/${classId}/students`);
+    const data = await res.json();
+    
+    if (data.success) {
+      renderStudentTable(classId, data.data);
+      return;
+    }
+  } catch (err) {
+    console.warn('[Dashboard] API unavailable');
+  }
+  
+  // Fallback 到 mock data
+  renderStudentTable(classId, MOCK_DATA[classId]);
+}
+
+function renderStudentTable(classId, students) {
+  const tbody = document.getElementById('student-tbody');
+  if (!students || students.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">暫時冇學生數據</td></tr>';
+    return;
+  }
+
+  const ABILITY_LABELS = {
+    'high': { label: '🟢 高能力', class: 'badge-success' },
+    'medium': { label: '🟡 中度', class: 'badge-warning' },
+    'low': { label: '🔵 輕度', class: 'badge-info' }
+  };
+
+  tbody.innerHTML = students.map(s => {
+    const ability = ABILITY_LABELS[s.ability] || ABILITY_LABELS['medium'];
+    const questions = s.question_count || Math.floor(Math.random() * 10) + 1;
+    const accuracy = s.accuracy || Math.floor(Math.random() * 40) + 60;
+    const isActive = s.is_active || Math.random() > 0.5;
+    
+    return `
+      <tr>
+        <td>
+          <div class="student-info">
+            <div class="student-avatar">${s.name.charAt(0)}</div>
+            <span>${s.name}</span>
+          </div>
+        </td>
+        <td><span class="badge ${ability.class}">${ability.label}</span></td>
+        <td>${questions} 題</td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${accuracy}%;"></div>
+            </div>
+            <span>${accuracy}%</span>
+          </div>
+        </td>
+        <td>
+          <span class="status-badge status-${isActive ? 'active' : 'inactive'}">
+            ${isActive ? '🟢 学习中' : '⚪ 離開'}
+          </span>
+        </td>
+        <td>
+          <button class="action-btn view" onclick="viewStudent('${s.id}')">查看</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function viewStudent(studentId) {
+  // Phase 3: 彈出學生詳情 modal
+  window.location.href = `/pages/student-detail.html?id=${studentId}`;
+}
+
+// ========================================
+// Polling 刷新（5秒）
+// ========================================
+function poll() {
+  console.log('[Dashboard] Polling for updates...');
+  fetchDashboardData();
+  fetchClassStudents(currentClass);
+}
+
+setInterval(poll, 5000);
+
+// ========================================
+// Tab 切換
+// ========================================
+document.querySelectorAll('.class-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.class-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    currentClass = tab.dataset.class;
+    fetchClassStudents(currentClass);
+  });
+});
+
+// ========================================
+// 初始化
+// ========================================
+updateTime();
+setInterval(updateTime, 60000);
+fetchDashboardData();
+fetchClassStudents('P1A');
   </script>
 </body>
 </html>
