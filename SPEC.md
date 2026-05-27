@@ -245,6 +245,10 @@ MINIMAX_API_KEY=你的key
 - student_id / class_id 傳入後端記錄
 
 ### 待完成
+- [x] LLM Router Service ✅
+- [x] ChatWidget API integration ✅
+- [x] Dashboard API integration + polling ✅
+- [x] Student detail page ✅
 - [ ] Ollama 串流回覆（streaming）
 - [ ] MiniMax 圖像生成（math image cards）
 - [ ] DeepSeek/Qwen 作為備用
