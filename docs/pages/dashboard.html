@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教師Dashboard — MathAI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    .dashboard {
+      padding: 24px 0;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .dashboard-title {
+      font-size: 28px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .stat-icon.blue { background: #e3f2fd; }
+    .stat-icon.green { background: #e8f5e9; }
+    .stat-icon.orange { background: #fff3e0; }
+    .stat-icon.purple { background: #f3e5f5; }
+
+    .stat-info h3 {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+
+    .stat-info p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .class-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .class-tab {
+      padding: 10px 20px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-xl);
+      background: var(--bg-white);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .class-tab:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .class-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .student-table {
+      width: 100%;
+    }
+
+    .student-table th {
+      background: var(--bg-light);
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 12px 16px;
+    }
+
+    .student-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .student-table tr:hover {
+      background: var(--bg-light);
+    }
+
+    .student-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .student-avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .progress-bar {
+      width: 100px;
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 4px;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-inactive {
+      background: var(--bg-light);
+      color: var(--text-muted);
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .action-btn.view {
+      background: var(--primary);
+      color: white;
+    }
+
+    .action-btn.view:hover {
+      background: var(--primary-dark);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <a href="/" class="logo">
+            <span class="logo-icon">🔢</span>
+            <span>MathAI 教師版</span>
+          </a>
+          <nav class="nav-links">
+            <a href="/">學生版</a>
+            <a href="/pages/dashboard.html" style="background: rgba(255,255,255,0.2);">Dashboard</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="dashboard">
+      <div class="container">
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">
+            📊 教師Dashboard
+            <span id="current-time" style="font-size: 16px; font-weight: normal; color: var(--text-muted);"></span>
+          </h1>
+          <button class="btn btn-primary" onclick="location.reload()">🔄 刷新</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">👥</div>
+            <div class="stat-info">
+              <h3 id="stat-students">15</h3>
+              <p>活躍學生</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">💬</div>
+            <div class="stat-info">
+              <h3 id="stat-messages">47</h3>
+              <p>今日訊息</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">📈</div>
+            <div class="stat-info">
+              <h3 id="stat-accuracy">73%</h3>
+              <p>正確率</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">🏆</div>
+            <div class="stat-info">
+              <h3 id="stat-classes">3</h3>
+              <p>班級數量</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Class Tabs -->
+        <div class="class-tabs" id="class-tabs">
+          <button class="class-tab active" data-class="P1A">P1A</button>
+          <button class="class-tab" data-class="P2A">P2A</button>
+          <button class="class-tab" data-class="S1B">S1B</button>
+        </div>
+
+        <!-- Student Table -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">📋 學生概覽</h2>
+            <div class="card-actions">
+              <button class="btn btn-sm btn-secondary">+ 新增學生</button>
+              <button class="btn btn-sm btn-secondary">📥 匯入名單</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="student-table" id="student-table">
+              <thead>
+                <tr>
+                  <th>學生</th>
+                  <th>能力組別</th>
+                  <th>問題數</th>
+                  <th>正確率</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="student-tbody">
+                <!-- 動態生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h2 class="card-title">🕐 最近活動</h2>
+          </div>
+          <div id="activity-list">
+            <!-- 動態生成 -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        MathAI 數學助手 — 匡智張玉瓊晨輝學校
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // ========================================
+    // Mock 數據（Phase 1 使用）
+    // ========================================
+    const MOCK_DATA = {
+      'P1A': [
+        { id: 'p1a-01', name: '張鈞保', ability: 'high', questions: 12, accuracy: 92, status: 'active', lastMsg: '2加3係幾多？' },
+        { id: 'p1a-02', name: '陳大文', ability: 'medium', questions: 8, accuracy: 75, status: 'active', lastMsg: '三角形有幾多條邊？' },
+        { id: 'p1a-03', name: '李小红', ability: 'medium', questions: 6, accuracy: 67, status: 'inactive', lastMsg: '10減5係幾多？' },
+        { id: 'p1a-04', name: '王小明', ability: 'low', questions: 4, accuracy: 50, status: 'active', lastMsg: '圓形係點嘅？' },
+        { id: 'p1a-05', name: '陳志明', ability: 'medium', questions: 9, accuracy: 78, status: 'inactive', lastMsg: '5乘4係幾多？' }
+      ],
+      'P2A': [
+        { id: 'p2a-01', name: '周芷若', ability: 'high', questions: 15, accuracy: 95, status: 'active', lastMsg: '除法係點做？' },
+        { id: 'p2a-02', name: '吳俊傑', ability: 'medium', questions: 10, accuracy: 70, status: 'active', lastMsg: '6除2係幾多？' },
+        { id: 'p2a-03', name: '孫文斌', ability: 'medium', questions: 7, accuracy: 71, status: 'inactive', lastMsg: '正方形有幾多個角？' },
+        { id: 'p2a-04', name: '鄭凱文', ability: 'low', questions: 3, accuracy: 33, status: 'inactive', lastMsg: '我唔識...' },
+        { id: 'p2a-05', name: '何美琪', ability: 'medium', questions: 11, accuracy: 82, status: 'active', lastMsg: '點解要做功課？' }
+      ],
+      'S1B': [
+        { id: 's1b-01', name: '祝卓鋒', ability: 'high', questions: 20, accuracy: 90, status: 'active', lastMsg: '一元二次方程點樣做？' },
+        { id: 's1b-02', name: '黃曉明', ability: 'medium', questions: 14, accuracy: 79, status: 'active', lastMsg: '負數加正數點做？' },
+        { id: 's1b-03', name: '林志玲', ability: 'medium', questions: 8, accuracy: 75, status: 'inactive', lastMsg: '分數加法點做？' },
+        { id: 's1b-04', name: '張偉豪', ability: 'low', questions: 5, accuracy: 60, status: 'active', lastMsg: '正方形周界點計？' },
+        { id: 's1b-05', name: '劉德華', ability: 'medium', questions: 12, accuracy: 83, status: 'inactive', lastMsg: '面積公式係乜？' }
+      ]
+    };
+
+    const ACTIVITY_DATA = [
+      { time: '10:32', student: '張鈞保', class: 'P1A', action: '問了問題', detail: '2加3係幾多？', result: '✓ 回答正確' },
+      { time: '10:28', student: '祝卓鋒', class: 'S1B', action: '問了問題', detail: '一元二次方程點樣做？', result: '✓ 回答正確' },
+      { time: '10:25', student: '王小明', class: 'P1A', action: '尋求幫助', detail: '圓形係點嘅？', result: '✓ 已解答' },
+      { time: '10:20', student: '周芷若', class: 'P2A', action: '問了問題', detail: '除法係點做？', result: '✓ 回答正確' },
+      { time: '10:15', student: '陳大文', class: 'P1A', action: '尋求幫助', detail: '三角形有幾多條邊？', result: '✓ 已解答' }
+    ];
+
+    const ABILITY_LABELS = {
+      'high': { label: '🟢 高能力', class: 'badge-success' },
+      'medium': { label: '🟡 中度', class: 'badge-warning' },
+      'low': { label: '🔵 輕度', class: 'badge-info' }
+    };
+
+    // ========================================
+    // 當前選擇的班級
+    // ========================================
+    let currentClass = 'P1A';
+
+    // ========================================
+    // 渲染學生表格
+    // ========================================
+    function renderStudentTable(classId) {
+      const tbody = document.getElementById('student-tbody');
+      const students = MOCK_DATA[classId] || [];
+
+      tbody.innerHTML = students.map(s => {
+        const ability = ABILITY_LABELS[s.ability];
+        return `
+          <tr>
+            <td>
+              <div class="student-info">
+                <div class="student-avatar">${s.name.charAt(0)}</div>
+                <span>${s.name}</span>
+              </div>
+            </td>
+            <td><span class="badge ${ability.class}">${ability.label}</span></td>
+            <td>${s.questions} 題</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${s.accuracy}%;"></div>
+                </div>
+                <span>${s.accuracy}%</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge status-${s.status}">
+                ${s.status === 'active' ? '🟢 学习中' : '⚪ 離開'}
+              </span>
+            </td>
+            <td>
+              <button class="action-btn view">查看</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ========================================
+    // 渲染最近活動
+    // ========================================
+    function renderActivity() {
+      const list = document.getElementById('activity-list');
+
+      list.innerHTML = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>時間</th>
+              <th>學生</th>
+              <th>班級</th>
+              <th>動作</th>
+              <th>詳情</th>
+              <th>結果</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ACTIVITY_DATA.map(a => `
+              <tr>
+                <td>${a.time}</td>
+                <td>${a.student}</td>
+                <td>${a.class}</td>
+                <td>${a.action}</td>
+                <td>"${a.detail}"</td>
+                <td>${a.result}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // ========================================
+    // 更新時間顯示
+    // ========================================
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('current-time').textContent = `，香港時間 ${timeStr}`;
+    }
+
+    // ========================================
+    // Tab 切換
+    // ========================================
+    document.querySelectorAll('.class-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.class-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        currentClass = tab.dataset.class;
+        renderStudentTable(currentClass);
+      });
+    });
+
+    // ========================================
+    // Polling 模擬（5秒刷新）
+    // ========================================
+    function poll() {
+      console.log('Polling for updates...');
+      // Phase 2: 會從後端 API 獲取最新數據
+      // 目前只是模擬，所以每5秒簡單log一下
+    }
+
+    setInterval(poll, 5000);
+
+    // ========================================
+    // 初始化
+    // ========================================
+    updateTime();
+    setInterval(updateTime, 60000);
+    renderStudentTable('P1A');
+    renderActivity();
+
+    // 每5秒更新一次stats（模擬）
+    setInterval(() => {
+      const students = document.querySelectorAll('.stat-info h3');
+      // 隨機微微增加（模擬活躍）
+      const random = Math.floor(Math.random() * 3);
+      const current = parseInt(students[0].textContent);
+      if (current < 20) {
+        students[0].textContent = current + (Math.random() > 0.5 ? 1 : 0);
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
