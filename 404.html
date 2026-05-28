@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <script>
+    // GitHub Pages SPA fallback — redirect all 404s back to index.html
+    // with the path preserved as a query param so the app can handle routing
+    var path = window.location.pathname
+      .replace(/^\/(math-ai-platform)?\//, '/')  // strip repo prefix if present
+      .replace(/\/$/, '');                       // strip trailing slash
+    window.location.replace(
+      '/math-ai-platform/?redirect=' + encodeURIComponent(path || '/')
+    );
+  </script>
+</head>
+<body>
+  <p>Redirecting to MathAI Platform...</p>
+</body>
+</html>
