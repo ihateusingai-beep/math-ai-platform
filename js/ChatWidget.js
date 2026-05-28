@@ -314,7 +314,7 @@
         }
 
         .mathai-message.user .mathai-bubble {
-          background: #4a90d9;
+          background: ${this._subjectColors.primary};
           color: white;
           border-bottom-right-radius: 4px;
         }
@@ -376,13 +376,13 @@
         }
 
         .mathai-input:focus {
-          border-color: #4a90d9;
+          border-color: ${this._subjectColors.primary};
         }
 
         .mathai-send-btn {
           padding: 12px 20px;
           border: none;
-          background: #4a90d9;
+          background: ${this._subjectColors.primary};
           color: white;
           border-radius: 24px;
           font-size: 16px;
