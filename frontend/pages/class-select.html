@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>選擇你的名字 — MathAI</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="/math-ai-platform/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
     .class-header {
@@ -130,7 +130,7 @@
           </a>
           <nav class="nav-links">
             <a href="/math-ai-platform/">主頁</a>
-            <a href="/pages/dashboard.html">老師版</a>
+            <a href="/math-ai-platform/pages/dashboard.html">老師版</a>
           </nav>
         </div>
       </div>
@@ -213,7 +213,7 @@
       const students = STUDENTS_BY_CLASS[classId] || STUDENTS_BY_CLASS['P1A'];
 
       grid.innerHTML = students.map(s => `
-        <a href="/pages/chat.html?student=${s.id}&class=${classId}" class="student-btn">
+        <a href="/math-ai-platform/pages/chat.html?student=${s.id}&class=${classId}" class="student-btn">
           <span class="student-btn-icon">${s.icon}</span>
           <span class="student-btn-name">${s.name}</span>
           <span class="student-btn-ability ability-${s.ability}">${ABILITY_LABELS[s.ability]}</span>
