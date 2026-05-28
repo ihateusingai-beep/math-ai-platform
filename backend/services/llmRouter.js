@@ -3,7 +3,7 @@
  * Phase 3: Ollama + MiniMax + DeepSeek + Qwen 完整路由
  */
 
-const OLLAMA_BASE = process.env.OLLAMA_BASE || 'http://localhost:11434';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE || 'http://localhost:11434';
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY || '';
 const MINIMAX_ENDPOINT = 'https://api.minimax.chat/v1';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
@@ -58,6 +58,7 @@ const CONCEPT_PROMPT = `你係數學助手，用淺白廣東話解釋概念。
 // ========================================
 class LLMRouter {
   constructor() {
+    this.ollamaBase = OLLAMA_BASE_URL;
     this.ollamaModel = 'llama3.2';
     this.minimaxModel = 'MiniMax-Text-01';
     this.fallback = new QAFallback();
@@ -95,7 +96,7 @@ class LLMRouter {
   // ========================================
   async classifyIntent(message) {
     try {
-      const response = await fetch(`${OLLAMA_BASE}/api/generate`, {
+      const response = await fetch(`${this.ollamaBase}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,7 +149,7 @@ class LLMRouter {
   // ========================================
   async handleSimpleCalc(message) {
     try {
-      const response = await fetch(`${OLLAMA_BASE}/api/generate`, {
+      const response = await fetch(`${this.ollamaBase}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -176,7 +177,7 @@ class LLMRouter {
   // ========================================
   async handleConcept(message) {
     try {
-      const response = await fetch(`${OLLAMA_BASE}/api/generate`, {
+      const response = await fetch(`${this.ollamaBase}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -398,44 +399,7 @@ class QAFallback {
       }
     }
 
-    return { text: '我答唔到你試下問數學題，例如「2加3係幾多」？ 🔢', source: 'fallback' };
-  }
-
-  compute(input) {
-    const expr = input.replace(/[^\d\+\-\*\/\÷×\s]/g, '').trim();
-
-    try {
-      const normalized = expr
-        .replace(/×/g, '*')
-        .replace(/÷/g, '/')
-        .replace(/／/g, '/');
-
-      if (!/^[\d\s\+\-\*\/\.\(\)]+$/.test(normalized)) {
-        return { text: '計算機壞咗...', source: 'fallback' };
-      }
-
-      const result = Function('"use strict"; return (' + normalized + ')')();
-
-      return { text: `${input.replace(/\s+/g, '')} = ${result} ✅`, source: 'fallback' };
-    } catch (err) {
-      return { text: '計唔到...試下再問清楚啲？', source: 'fallback' };
-    }
-  }
-
-  getConceptResponse(input) {
-    const lower = input.toLowerCase();
-
-    if (lower.includes('三角形')) {
-      return { text: '三角形有三條邊，三個角。你可以搵身邊嘅嘢數下！🔺', source: 'fallback' };
-    }
-    if (lower.includes('正方形')) {
-      return { text: '正方形有4條一樣長嘅邊，4個一樣大嘅角。試下畫一個！📐', source: 'fallback' };
-    }
-    if (lower.includes('圓形')) {
-      return { text: '圓形冇角，係完全圓嘅。你可以搵硬幣睇下！⭕', source: 'fallback' };
-    }
-
-    return { text: '我明你想知呢個概念～你可以再問具體啲！ 💡', source: 'fallback' };
+return { text: '我答唔到你試下問數學題，例如「2加3係幾多」？ 🔢', source: 'fallback' };
   }
 }
 

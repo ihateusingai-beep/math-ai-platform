@@ -249,8 +249,6 @@ app.get('/api/dashboard/recent', (req, res) => {
 // Streaming LLM Chat (Phase 3)
 // ========================================
 
-const OLLAMA_BASE = process.env.OLLAMA_BASE || 'http://localhost:11434';
-
 // POST /api/llm/stream — SSE streaming response
 app.post('/api/llm/stream', async (req, res) => {
   const { message, student_id, class_id, context = {} } = req.body;
@@ -281,7 +279,7 @@ app.post('/api/llm/stream', async (req, res) => {
         ? '你係小型數學助手，只答基本計算。答覆要簡短（一句話），可以加簡單解釋，廣東話回覆。'
         : '你係數學助手，用淺白廣東話解釋概念。短句子，唔好太長，可以加emoji。';
 
-      const ollamaRes = await fetch(`${OLLAMA_BASE}/api/generate`, {
+      const ollamaRes = await fetch(`${llmRouter.ollamaBase}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
