@@ -11,11 +11,34 @@ const express = require('express');
 const cors = require('cors');
 const Database = require('better-sqlite3');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const rateLimit = require('express-rate-limit');
 const { llmRouter } = require('./services/llmRouter');
 const { imageGenerator } = require('./services/imageGenerator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SALT_ROUNDS = 12;
+
+// ========================================
+// Rate Limiting
+// ========================================
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  message: { success: false, error: '太多請求，請稍後再試' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const llmLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { success: false, error: 'LLM 請求超載，請稍後再試' },
+});
+
+app.use('/api/', apiLimiter);
+app.use('/api/llm', llmLimiter);
 
 // Helper
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -119,6 +142,21 @@ const seedData = () => {
 };
 
 seedData();
+
+// ========================================
+// Session TTL Cleanup (every 30 min)
+// ========================================
+const SESSION_TTL_HOURS = 24;
+setInterval(() => {
+  try {
+    const result = db.prepare(
+      "DELETE FROM sessions WHERE last_active < datetime('now', ?)"
+    ).run(`-${SESSION_TTL_HOURS} hours`);
+    if (result.changes > 0) console.log(`🧹 Session cleanup: removed ${result.changes} stale sessions`);
+  } catch (err) {
+    console.error('Session cleanup error:', err.message);
+  }
+}, 30 * 60 * 1000);
 
 // ========================================
 // API Routes
@@ -617,13 +655,21 @@ app.post('/api/students', (req, res) => {
   }
 
   try {
-    const password_hash = password ? require('crypto').createHash('sha256').update(password).digest('hex') : null;
-
-    db.prepare(
-      'INSERT OR REPLACE INTO students (id, name, class_id, ability, has_account, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(id, name, class_id, ability, has_account ? 1 : 0, password_hash);
-
-    res.json({ success: true, data: { id, name, class_id, ability, has_account } });
+    // Async bcrypt hash — store only the hash, never plaintext
+    if (password) {
+      bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        db.prepare(
+          'INSERT OR REPLACE INTO students (id, name, class_id, ability, has_account, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run(id, name, class_id, ability, has_account ? 1 : 0, hash);
+        res.json({ success: true, data: { id, name, class_id, ability, has_account } });
+      });
+    } else {
+      db.prepare(
+        'INSERT OR REPLACE INTO students (id, name, class_id, ability, has_account, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
+      ).run(id, name, class_id, ability, has_account ? 1 : 0, null);
+      res.json({ success: true, data: { id, name, class_id, ability, has_account } });
+    }
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -671,23 +717,24 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ success: false, error: 'Account not found' });
     }
 
-    const hash = require('crypto').createHash('sha256').update(password).digest('hex');
-    if (student.password_hash !== hash) {
-      return res.status(401).json({ success: false, error: 'Invalid password' });
-    }
-
-    // Create session
-    const session_id = require('crypto').randomUUID();
-    db.prepare(
-      'INSERT INTO sessions (id, student_id, class_id) VALUES (?, ?, ?)'
-    ).run(session_id, student_id, student.class_id);
-
-    res.json({
-      success: true,
-      data: {
-        session_id,
-        student: { id: student.id, name: student.name, class_id: student.class_id, ability: student.ability }
+    // bcrypt compare — async, safe
+    bcrypt.compare(password, student.password_hash, (err, match) => {
+      if (err || !match) {
+        return res.status(401).json({ success: false, error: 'Invalid password' });
       }
+      // Create session after successful auth
+      const session_id = require('crypto').randomUUID();
+      db.prepare(
+        'INSERT INTO sessions (id, student_id, class_id) VALUES (?, ?, ?)'
+      ).run(session_id, student_id, student.class_id);
+
+      res.json({
+        success: true,
+        data: {
+          session_id,
+          student: { id: student.id, name: student.name, class_id: student.class_id, ability: student.ability }
+        }
+      });
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
