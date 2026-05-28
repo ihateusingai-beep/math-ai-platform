@@ -13,6 +13,9 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
+
+// Load .env before other modules
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { llmRouter } = require('./services/llmRouter');
 const { imageGenerator } = require('./services/imageGenerator');
 
@@ -429,9 +432,21 @@ app.post('/api/llm/stream', async (req, res) => {
 
   } catch (err) {
     console.error('[Stream] Error:', err);
-    
-    res.write(`data: ${JSON.stringify({ error: true, message: '服務暫時不可用，請稍後再試' })}\n\n`);
-    res.end();
+
+    // Friendly error messages by type
+    let userMsg = '服務暫時唔聽話，紧再試吓啦 😅';
+    if (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('ECONNREFUSED')) {
+      userMsg = '網絡連接有問題，檢查下 WiFi 然後再試 😅';
+    } else if (err.message.includes('Ollama')) {
+      userMsg = 'AI 服務忙碌中，等等再試啦 😅';
+    } else if (err.message.includes('timeout')) {
+      userMsg = '回覆太耐了，可能網速有問題 😅';
+    }
+
+    if (!aborted) {
+      res.write(`data: ${JSON.stringify({ error: true, message: userMsg })}\n\n`);
+      res.end();
+    }
   }
 });
 

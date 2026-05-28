@@ -406,6 +406,21 @@
       this.recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         this._stopListening();
+
+        // User-friendly voice error feedback
+        const feedbackEl = this.options.container.querySelector('#mathai-feedback');
+        if (feedbackEl) {
+          let msg = '聽唔到你講嘢，試下再錄多一次 🗣️';
+          if (event.error === 'no-speech') msg = '冇聽到聲音，对著🎤大聲講試試 📢';
+          else if (event.error === 'audio-capture') msg = '搵唔到咪高峰，檢查下設置 🎤';
+          else if (event.error === 'network') msg = '網絡問題，請檢查 WiFi 📶';
+
+          feedbackEl.className = 'mathai-feedback show incorrect';
+          feedbackEl.textContent = msg;
+          setTimeout(() => {
+            feedbackEl.className = 'mathai-feedback';
+          }, 4000);
+        }
       };
 
       this.recognition.onend = () => {
@@ -521,6 +536,22 @@
         const response = this._getResponse(message);
         this.addMessage(response, 'bot');
         this._showFeedback('correct', '✅ 已回答');
+        // 長訊息截斷（> 500字）
+        if (response.length > 500) {
+          const messagesDiv = this.options.container.querySelector('#mathai-messages');
+          const lastMsg = messagesDiv.lastElementChild;
+          if (lastMsg) {
+            const bubble = lastMsg.querySelector('.mathai-bubble');
+            if (bubble) {
+              bubble.textContent = response.slice(0, 500) + '... ';
+              const moreBtn = document.createElement('button');
+              moreBtn.textContent = '查看更多';
+              moreBtn.style.cssText = 'background:none;border:none;color:#4a90d9;cursor:pointer;font-size:14px;padding:0;margin-left:4px;';
+              moreBtn.onclick = () => { bubble.textContent = response; moreBtn.remove(); };
+              bubble.appendChild(moreBtn);
+            }
+          }
+        }
       });
     }
 
@@ -577,6 +608,20 @@
 
               if (data.done) {
                 this._showFeedback('correct', '✅ 已回答');
+                // 長訊息截斷（> 500字）
+                if (fullResponse.length > 500) {
+                  const truncated = fullResponse.slice(0, 500);
+                  const remainder = fullResponse.slice(500);
+                  bubble.textContent = truncated + '... ';
+                  const moreBtn = document.createElement('button');
+                  moreBtn.textContent = '查看更多';
+                  moreBtn.style.cssText = 'background:none;border:none;color:#4a90d9;cursor:pointer;font-size:14px;padding:0;margin-left:4px;';
+                  moreBtn.onclick = () => {
+                    bubble.textContent = fullResponse;
+                    moreBtn.remove();
+                  };
+                  bubble.appendChild(moreBtn);
+                }
                 // Phase 4: 自動生成圖卡
                 this._appendImageCard(fullResponse, message);
               }
