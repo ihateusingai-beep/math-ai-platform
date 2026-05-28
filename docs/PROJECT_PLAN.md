@@ -153,12 +153,13 @@ sessions       — 會話 (id, student_id, class_id, started_at, last_active, me
 | **GitHub Pages SPA fallback** | 所有路徑 fallback 到 index.html，API routes 在後端 | 前端直接訪問 `/api/*` 會 404 |
 | **In-memory 圖卡緩存** | 重啟後 cache 丢失，MiniMax API 負擔增加 | 每次重啟後首次請求都打 API |
 
-### 🟠 UX 層面（低優先）
+### 🟠 UX 層面（中優先）
 
 | 問題 | 說明 | 風險 |
 |------|------|------|
-| **Streaming 無取消** | 用戶不能中途取消正在生成的回覆 | 等待時間長時無解 |
-| **錯誤訊息不友善** | LLM 失敗時只顯示「服務暫時不可用」 | 用戶不知道發生了什麼 |
+| ~~**Streaming 無取消**~~ | ~~用戶不能中途取消正在生成的回覆~~ | **✅ 已修復：AbortController + 停按鈕** |
+| ~~**圖卡緩存重啟後丢失**~~ | ~~base64 保存到 public/images/，文件持久化~~ | **✅ 已修復** |
+| **錯誤訊息不友善** | LLM 失敗時只顯示「服務暫時不可用」 | 顯示籠統，無引導 |
 | **語音輸入失敗無提示** | 語音辨識失敗只 console.error，無 UI 反饋 | SEN 學生可能以為按鈕壞了 |
 | **長訊息無截斷** | 回覆過長時無滾動/截斷 | 手機上可能影響布局 |
 | **登入失敗無重試引導** | 密碼錯誤只返回 401，無明確提示 | 用戶可能反覆嘗試 |
@@ -197,17 +198,15 @@ sessions       — 會話 (id, student_id, class_id, started_at, last_active, me
 
 ### P2 — 穩定性
 
-7. **Streaming 取消**
-   - `AbortController` 支援中途取消
-   - UI 添加「停止」按鈕
-
+7. ~~**Streaming 取消**~~
+   - ~~AbortController 支援中途取消~~
+   - ~~UI 添加「停止」按鈕~~ ✅
 8. **Error Boundary**
    - ChatWidget 添加錯誤邊界
    - 每個 API call 加 try-catch + 友善錯誤訊息
 
-9. **Image Cache 持久化**
-   - 圖卡 URL 寫入 SQLite 而非 Map
-   - 避免重啟後 cache miss
+9. ~~**Image Cache 持久化**~~
+   - ~~圖卡 URL 保存到 public/images/~~ ✅
 
 ### P3 — UX 提升
 
