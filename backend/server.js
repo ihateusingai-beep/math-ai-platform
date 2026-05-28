@@ -288,12 +288,16 @@ app.get('/api/dashboard/recent', (req, res) => {
 // ========================================
 
 // POST /api/llm/stream — SSE streaming response
+// Supports AbortController for mid-stream cancellation
 app.post('/api/llm/stream', async (req, res) => {
   const { message, student_id, class_id, context = {} } = req.body;
 
   if (!message) {
     return res.status(400).json({ success: false, error: 'Missing message' });
   }
+
+  // Support AbortController signal from frontend
+  const abortSignal = req.abortSignal;
 
   // 設置 SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
@@ -302,6 +306,17 @@ app.post('/api/llm/stream', async (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
 
   res.flushHeaders();
+
+  let aborted = false;
+  if (abortSignal) {
+    abortSignal.addEventListener('abort', () => {
+      aborted = true;
+      if (!res.headersSent) {
+        res.write(`data: ${JSON.stringify({ token: '', done: true, aborted: true })}\n\n`);
+        res.end();
+      }
+    });
+  }
 
   try {
     // 意圖分類
@@ -345,11 +360,14 @@ app.post('/api/llm/stream', async (req, res) => {
       const response = helps[Math.floor(Math.random() * helps.length)];
       
       for (const char of response) {
+        if (aborted) break;
         res.write(`data: ${JSON.stringify({ token: char, done: false })}\n\n`);
         await sleep(30);
       }
-      res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
-      res.end();
+      if (!aborted) {
+        res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
+        res.end();
+      }
       return;
 
     } else {
@@ -358,11 +376,14 @@ app.post('/api/llm/stream', async (req, res) => {
       fullResponse = response.text;
       
       for (const char of fullResponse) {
+        if (aborted) break;
         res.write(`data: ${JSON.stringify({ token: char, done: false })}\n\n`);
         await sleep(20);
       }
-      res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
-      res.end();
+      if (!aborted) {
+        res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
+        res.end();
+      }
       return;
     }
 
@@ -371,6 +392,7 @@ app.post('/api/llm/stream', async (req, res) => {
     let buffer = '';
 
     for await (const chunk of stream) {
+      if (aborted) break;
       buffer += decoder.decode(chunk, { stream: true });
       
       const lines = buffer.split('\n');
@@ -393,8 +415,10 @@ app.post('/api/llm/stream', async (req, res) => {
       }
     }
 
-    res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
-    res.end();
+    if (!aborted) {
+      res.write(`data: ${JSON.stringify({ token: '', done: true })}\n\n`);
+      res.end();
+    }
 
     // 記錄到數據庫
     if (student_id && class_id) {

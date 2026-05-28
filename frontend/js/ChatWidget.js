@@ -493,8 +493,13 @@
     _sendToBackend(message) {
       const { studentId = 'guest', classId = 'P1A' } = this.options;
 
-      // Phase 3: SSE streaming endpoint
+      // Phase 3: SSE streaming endpoint with AbortController
       const apiUrl = this.options.streamUrl || '/api/llm/stream';
+      this._abortController = new AbortController();
+      const signal = this._abortController.signal;
+
+      // Show cancel button during streaming
+      this._showCancelButton();
 
       fetch(apiUrl, {
         method: 'POST',
@@ -503,7 +508,8 @@
           message,
           student_id: studentId,
           class_id: classId
-        })
+        }),
+        signal
       })
       .then(res => {
         if (!res.ok) throw new Error('API error');
@@ -696,6 +702,21 @@
 
       feedback.className = `mathai-feedback show ${type}`;
       feedback.textContent = message;
+    }
+
+    _showCancelButton() {
+      const feedback = this.options.container.querySelector('#mathai-feedback');
+      if (!feedback) return;
+      feedback.className = 'mathai-feedback show streaming';
+      feedback.innerHTML = '✨ 打字中... <button onclick="document.querySelector(\'.mathai-widget\').__mathAI?.cancelStream()" style="margin-left:8px;padding:4px 12px;background:#ff4444;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">停</button>';
+    }
+
+    cancelStream() {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+        this._showFeedback('incorrect', '已取消 ✕');
+      }
     }
 
     _hideFeedback() {
