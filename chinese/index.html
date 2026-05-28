@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中文學習 — MathAI</title>
+  <link rel="stylesheet" href="/math-ai-platform/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    body { background: linear-gradient(135deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%); }
+    .hero { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+    .hero-actions .btn-primary { background: #c0392b; }
+    .hero-actions .btn-primary:hover { background: #a93226; }
+    .subject-card[data-subject="math"] { border-top: 4px solid #4a90d9; }
+    .subject-card[data-subject="chinese"] { border-top: 4px solid #e74c3c; }
+    .subject-card[data-subject="english"] { border-top: 4px solid #27ae60; }
+    .subject-card[data-subject="science"] { border-top: 4px solid #9b59b6; }
+    .back-link { color: white; opacity: 0.9; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+    .back-link:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <div class="container header-content">
+        <a href="/math-ai-platform/" class="logo">
+          <span style="font-size: 28px;">📚</span>
+          <span>MathAI 中文</span>
+        </a>
+        <nav class="nav-links">
+          <a href="/math-ai-platform/">返回主頁</a>
+          <a href="/math-ai-platform/pages/dashboard.html">老師版</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <a href="/math-ai-platform/" class="back-link">← 返回主頁</a>
+      <div class="hero-icon">📚</div>
+      <h1 class="hero-title">中文學習助手</h1>
+      <p class="hero-subtitle">
+        幫你認字、學詞彙、讀句子📖<br>
+        一步一步陪你學中文！
+      </p>
+      <div class="hero-actions">
+        <a href="/math-ai-platform/chinese/class-select.html" class="btn btn-primary btn-lg">開始學習 →</a>
+        <a href="/math-ai-platform/pages/dashboard.html" class="btn btn-secondary btn-lg">老師登入</a>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" style="background: white;">
+      <div class="container">
+        <h2 style="text-align: center; font-size: 32px; margin-bottom: 40px;">✨ 我可以幫你</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">✍️</div>
+            <h3 class="feature-title">認字筆順</h3>
+            <p class="feature-desc">每個字慢慢教，筆順圖幫你記</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📖</div>
+            <h3 class="feature-title">詞彙學習</h3>
+            <p class="feature-desc">圖卡配詞，記得快過人</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🗣️</div>
+            <h3 class="feature-title">朗讀練習</h3>
+            <p class="feature-desc">讀出聲，練發音，語音幫你評</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3 class="feature-title">語音輸入</h3>
+            <p class="feature-desc">掂住講就得，一隻手指都用到</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Class Selection -->
+    <section class="class-section" style="background: #f8f9fa;">
+      <div class="container">
+        <h2>選擇你的班級</h2>
+        <div class="class-grid">
+          <a href="/math-ai-platform/chinese/class-select.html?class=P1A&subject=chinese" class="class-card">
+            <span class="class-card-icon">📗</span>
+            <span class="class-card-name">P1A</span>
+            <span class="class-card-desc">小一 A 班</span>
+          </a>
+          <a href="/math-ai-platform/chinese/class-select.html?class=P2A&subject=chinese" class="class-card">
+            <span class="class-card-icon">📘</span>
+            <span class="class-card-name">P2A</span>
+            <span class="class-card-desc">小二 A 班</span>
+          </a>
+          <a href="/math-ai-platform/chinese/class-select.html?class=S1B&subject=chinese" class="class-card">
+            <span class="class-card-icon">📙</span>
+            <span class="class-card-name">S1B</span>
+            <span class="class-card-desc">中一 B 班</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Other Subjects -->
+    <section class="subject-section" style="background: white; padding: 40px 0;">
+      <div class="container">
+        <h2 style="text-align: center; font-size: 24px; margin-bottom: 20px;">其他學科</h2>
+        <div class="subject-grid" style="max-width: 700px;">
+          <a href="/math-ai-platform/" class="subject-card" data-subject="math">
+            <div class="subject-icon">🔢</div>
+            <div class="subject-name">數學</div>
+            <div class="subject-desc">計算、形狀</div>
+          </a>
+          <a href="/math-ai-platform/english/index.html" class="subject-card" data-subject="english">
+            <div class="subject-icon">🔤</div>
+            <div class="subject-name">英文</div>
+            <div class="subject-desc">字母、單字</div>
+          </a>
+          <a href="/math-ai-platform/science/index.html" class="subject-card" data-subject="science">
+            <div class="subject-icon">🔬</div>
+            <div class="subject-name">常識</div>
+            <div class="subject-desc">自然、科學</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        MathAI 中文學習 — 匡智張玉瓊晨輝學校<br>
+        Made with ❤️ for students
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

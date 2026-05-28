@@ -468,3 +468,82 @@ body {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* ========================================
+   Subject Cards (Homepage)
+   ======================================== */
+
+.subject-section {
+  padding: 60px 0;
+  background: #f8f9fa;
+}
+
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.subject-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 16px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-dark);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.subject-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border-color: var(--primary);
+}
+
+.subject-card[data-subject="math"] { border-top: 4px solid #4a90d9; }
+.subject-card[data-subject="chinese"] { border-top: 4px solid #e74c3c; }
+.subject-card[data-subject="english"] { border-top: 4px solid #27ae60; }
+.subject-card[data-subject="science"] { border-top: 4px solid #9b59b6; }
+
+.subject-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.subject-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.subject-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .subject-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .subject-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .subject-card {
+    padding: 20px 12px;
+  }
+  .subject-icon {
+    font-size: 36px;
+  }
+}

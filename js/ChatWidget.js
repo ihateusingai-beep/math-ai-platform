@@ -102,9 +102,17 @@
     {
       keywords: [],
       patterns: [],
-      response: '我明你意思喇，不過我仲學緊中。你可以試下問我啲數學題，例如「2加3係幾多」或者「三角形有幾多條邊」？'
+      response: 'DEFAULT_SUBJECT_RESPONSE'
     }
   ];
+
+  // Subject-specific default responses (used by _getResponse)
+  const DEFAULT_RESPONSES = {
+    math: '我明你意思喇，不過我仲學緊中。你可以試下問我啲數學問題，例如：「2加3係幾多」或者「三角形有幾多條邊」？',
+    chinese: '我明你意思喇，不過我仲學緊中。你可以試下問我啲中文問題，例如：「日字點讀」或者「蘋果係咩字」？',
+    english: 'I don\'t quite understand yet! Try asking me English words, like "what is cat?" or "how do you say apple?"',
+    science: '我明你意思喇，不過我仲學緊中。你可以試下問我啲常识問題，例如：「水係咩形狀」或者「太陽係咩顏色」？'
+  };
 
   // ========================================
   // ChatWidget 類
@@ -115,6 +123,7 @@
         container: null,
         studentName: null,
         classId: null,
+        subject: 'math',
         onMessage: null,
         voiceEnabled: true,
         ...options
@@ -128,10 +137,57 @@
     }
 
     _init() {
+      this._initSubjectColors();
       this._setupHTML();
       this._setupStyles();
       this._setupVoice();
       this._bindEvents();
+    }
+
+    _getSubjectIcon() {
+      const icons = { math: '🔢', chinese: '📚', english: '🔤', science: '🔬' };
+      return icons[this.options.subject] || '🔢';
+    }
+
+    _getSubjectTitle() {
+      const titles = { math: '數學小助手', chinese: '中文小助手', english: '英文小助手', science: '常識小助手' };
+      return titles[this.options.subject] || '數學小助手';
+    }
+
+    _initSubjectColors() {
+      const colors = {
+        math: { primary: '#4a90d9', gradient: 'linear-gradient(135deg, #4a90d9, #67b26f)' },
+        chinese: { primary: '#c0392b', gradient: 'linear-gradient(135deg, #c0392b, #e74c3c)' },
+        english: { primary: '#27ae60', gradient: 'linear-gradient(135deg, #27ae60, #2ecc71)' },
+        science: { primary: '#9b59b6', gradient: 'linear-gradient(135deg, #9b59b6, #a569bd)' }
+      };
+      this._subjectColors = colors[this.options.subject] || colors.math;
+    }
+
+    _getSubjectExamples() {
+      const map = { math: '數學問題', chinese: '中文問題', english: '英文問題', science: '常識問題' };
+      return map[this.options.subject] || '數學問題';
+    }
+
+    _getSubjectExampleItems() {
+      const examples = {
+        math: ['「2加3係幾多？」', '「三角形有幾多條邊？」', '「10減5係幾多？」'],
+        chinese: ['「日字點讀？」', '「蘋果係咩字？」', '「一係咩字？」'],
+        english: ['「cat係咩？」', '「hello係咩？」', '「apple係咩？」'],
+        science: ['「水係咩形狀？」', '「太陽係咩顏色？」', '「植物需要咩？」']
+      };
+      const items = examples[this.options.subject] || examples.math;
+      return items.map(item => `<li>${item}</li>`).join('');
+    }
+
+    _getInputPlaceholder() {
+      const map = {
+        math: '輸入數學問題...',
+        chinese: '輸入中文問題...',
+        english: '輸入英文問題...',
+        science: '輸入常識問題...'
+      };
+      return map[this.options.subject] || '輸入數學問題...';
     }
 
     _setupHTML() {
@@ -139,21 +195,19 @@
       if (!container) return;
 
       container.innerHTML = `
-        <div class="mathai-widget">
+        <div class="mathai-widget" data-subject="${this.options.subject}">
           <div class="mathai-header">
-            <span class="mathai-avatar">🔢</span>
-            <span class="mathai-title">數學小助手</span>
+            <span class="mathai-avatar">${this._getSubjectIcon()}</span>
+            <span class="mathai-title">${this._getSubjectTitle()}</span>
             ${this.options.studentName ? `<span class="mathai-student">${this.options.studentName}</span>` : ''}
           </div>
 
           <div class="mathai-messages" id="mathai-messages">
             <div class="mathai-welcome">
-              <p>👋 你好！我係數學小助手</p>
-              <p>你可以問我數學問題，例如：</p>
+              <p>👋 你好！我係${this._getSubjectTitle()}</p>
+              <p>你可以問我${this._getSubjectExamples()}，例如：</p>
               <ul>
-                <li>「2加3係幾多？」</li>
-                <li>「三角形有幾多條邊？」</li>
-                <li>「10減5係幾多？」</li>
+                ${this._getSubjectExampleItems()}
               </ul>
             </div>
           </div>
@@ -162,7 +216,7 @@
             <button class="mathai-voice-btn" id="mathai-voice-btn" title="按住講嘢" ${!this.options.voiceEnabled ? 'disabled' : ''}>
               🎤
             </button>
-            <input type="text" class="mathai-input" id="mathai-input" placeholder="輸入數學問題..." autocomplete="off" />
+            <input type="text" class="mathai-input" id="mathai-input" placeholder="${this._getInputPlaceholder()}" autocomplete="off" />
             <button class="mathai-send-btn" id="mathai-send-btn">發送</button>
           </div>
 
@@ -181,7 +235,7 @@
           font-family: 'Microsoft YaHei', 'PingFang HK', sans-serif;
           max-width: 600px;
           margin: 0 auto;
-          border: 2px solid #4a90d9;
+          border: 2px solid ${this._subjectColors.primary};
           border-radius: 16px;
           overflow: hidden;
           background: #fafafa;
@@ -189,7 +243,7 @@
         }
 
         .mathai-header {
-          background: linear-gradient(135deg, #4a90d9, #67b26f);
+          background: ${this._subjectColors.gradient};
           color: white;
           padding: 16px;
           display: flex;
@@ -510,8 +564,12 @@
         }
       }
 
-      // 預設回覆
-      return QA_FALLBACK[QA_FALLBACK.length - 1].response;
+      // 預設回覆（subject-specific）
+      const lastRes = QA_FALLBACK[QA_FALLBACK.length - 1].response;
+      if (lastRes === 'DEFAULT_SUBJECT_RESPONSE') {
+        return DEFAULT_RESPONSES[this.options.subject] || DEFAULT_RESPONSES.math;
+      }
+      return lastRes;
     }
 
     addMessage(text, type = 'bot') {

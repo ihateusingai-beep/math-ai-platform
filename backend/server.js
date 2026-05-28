@@ -18,6 +18,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { llmRouter } = require('./services/llmRouter');
 const { imageGenerator } = require('./services/imageGenerator');
+const { getSubjectConfig } = require('./services/subjectRouter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -293,11 +294,14 @@ app.get('/api/dashboard/recent', (req, res) => {
 // POST /api/llm/stream — SSE streaming response
 // Supports AbortController for mid-stream cancellation
 app.post('/api/llm/stream', async (req, res) => {
-  const { message, student_id, class_id, context = {} } = req.body;
+  const { message, student_id, class_id, context = {}, subject = 'math' } = req.body;
 
   if (!message) {
     return res.status(400).json({ success: false, error: 'Missing message' });
   }
+
+  // Get subject config (defaults to math)
+  const subjectConfig = getSubjectConfig(subject);
 
   // Support AbortController signal from frontend
   const abortSignal = req.abortSignal;
@@ -324,16 +328,14 @@ app.post('/api/llm/stream', async (req, res) => {
   try {
     // 意圖分類
     const intent = await llmRouter.classifyIntent(message);
-    console.log(`[Stream] Intent: ${intent}`);
+    console.log(`[Stream] Intent: ${intent} | Subject: ${subject}`);
 
     let stream;
     let fullResponse = '';
 
     if (intent === 'A' || intent === 'B') {
-      // 簡單計算/概念 → Ollama streaming
-      const systemPrompt = intent === 'A' 
-        ? '你係小型數學助手，只答基本計算。答覆要簡短（一句話），可以加簡單解釋，廣東話回覆。'
-        : '你係數學助手，用淺白廣東話解釋概念。短句子，唔好太長，可以加emoji。';
+      // 簡單計算/概念 → Ollama streaming (use subject system prompt)
+      const systemPrompt = subjectConfig.systemPrompt;
 
       const ollamaRes = await fetch(`${llmRouter.ollamaBase}/api/generate`, {
         method: 'POST',
@@ -343,7 +345,7 @@ app.post('/api/llm/stream', async (req, res) => {
           prompt: `${systemPrompt}\n\n用家問題：${message}`,
           stream: true,
           options: {
-            temperature: intent === 'A' ? 0.1 : 0.3,
+            temperature: subjectConfig.temperature,
             num_predict: 150
           }
         })
@@ -374,8 +376,8 @@ app.post('/api/llm/stream', async (req, res) => {
       return;
 
     } else {
-      // 複雜題 → MiniMax/DeepSeek/Qwen（非streaming）
-      const response = await llmRouter.route(message, context);
+      // 複雜題 → MiniMax/DeepSeek/Qwen（非streaming, pass subject context）
+      const response = await llmRouter.route(message, { ...context, subject });
       fullResponse = response.text;
       
       for (const char of fullResponse) {
