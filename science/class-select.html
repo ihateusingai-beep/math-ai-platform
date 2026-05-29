@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>選擇你的名字 — MathAI 常識</title>
+  <title>選擇你的名字 — 🌟 晨暉學習平台 常識</title>
   <link rel="stylesheet" href="/math-ai-platform/css/style.css">
   <style>
-    body { background: linear-gradient(135deg, #9b59b6 0%, #a569bd 100%); }
+    body { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); }
     .page-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
     .header { background: white; box-shadow: var(--shadow-md); }
-    .logo { color: #9b59b6; }
+    .logo { color: #8e44ad; }
     .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
     .class-header { text-align: center; margin-bottom: 40px; }
     .class-icon { font-size: 80px; margin-bottom: 16px; }
@@ -37,7 +37,7 @@
       <div class="container header-content">
         <a href="/math-ai-platform/science/index.html" class="logo">
           <span style="font-size: 28px;">🔬</span>
-          <span>MathAI 常識</span>
+          <span>🌟 晨暉常識</span>
         </a>
         <nav class="nav-links">
           <a href="/math-ai-platform/science/index.html">主頁</a>
@@ -50,7 +50,7 @@
       <a href="/math-ai-platform/science/index.html" class="back-link">← 返回主頁</a>
       
       <div class="class-header">
-        <div class="class-icon">🔬</div>
+        <div class="class-icon">📗</div>
         <div class="class-name" id="className">P1A</div>
         <div class="class-label">常識班</div>
       </div>
@@ -63,20 +63,18 @@
     <!-- Footer -->
     <footer class="footer" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);">
       <div class="container">
-        MathAI 常識學習 — 匡智張玉瓊晨輝學校
+        🌟 晨暉學習平台 — 匡智張玉瓊晨輝學校
       </div>
     </footer>
   </div>
 
   <script>
-    // Parse class from URL
     const params = new URLSearchParams(window.location.search);
     const classId = params.get('class') || 'P1A';
     const subject = params.get('subject') || 'science';
 
     document.getElementById('className').textContent = classId;
 
-    // Mock student data per class
     const studentData = {
       'P1A': [
         { id: 'p1a-01', name: '張鈞保', ability: 'high' },

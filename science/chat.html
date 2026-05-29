@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>科學助手 — MathAI</title>
+  <title>Science Assistant — 🌟 晨暉學習平台</title>
   <link rel="stylesheet" href="/math-ai-platform/css/style.css">
   <style>
-    body { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); }
+    body { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); }
     .chat-page { display: flex; flex-direction: column; min-height: 100vh; }
-    .chat-header { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-md); }
+    .chat-header { background: linear-gradient(135deg, #8e44ad, #9b59b6); color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-md); }
     .chat-user-info { display: flex; align-items: center; gap: 12px; }
     .chat-user-avatar { width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     .chat-user-details h2 { font-size: 18px; font-weight: 700; }
@@ -29,29 +29,25 @@
 </head>
 <body>
   <div class="chat-page">
-    <!-- Header -->
     <header class="chat-header">
       <div class="chat-user-info">
         <div class="chat-user-avatar">👤</div>
         <div class="chat-user-details">
           <h2 class="chat-user-name" id="student-name">張鈞保</h2>
-          <p class="chat-user-class" id="student-class">P1A 科學班</p>
+          <p class="chat-user-class" id="student-class">P1A 常識班</p>
         </div>
       </div>
       <a href="javascript:history.back()" class="chat-back-btn">← 返回</a>
     </header>
 
-    <!-- Chat Widget -->
     <main class="chat-main">
       <div class="chat-widget-container">
         <div id="chat-widget-mount"></div>
       </div>
     </main>
 
-    <!-- Help Button -->
     <button class="chat-help-btn" id="help-btn" title="需要幫助？">❓</button>
 
-    <!-- Help Modal -->
     <div class="help-modal" id="help-modal">
       <div class="help-modal-content">
         <div class="help-modal-title">🎓 需要老師幫助？</div>
@@ -64,7 +60,6 @@
     </div>
   </div>
 
-  <!-- ChatWidget Script -->
   <script src="/math-ai-platform/js/ChatWidget.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -100,7 +95,7 @@
     const currentStudent = students.find(s => s.id === studentId) || students[0];
 
     document.getElementById('student-name').textContent = currentStudent.name;
-    document.getElementById('student-class').textContent = `${classId} 科學班`;
+    document.getElementById('student-class').textContent = `${classId} 常識班`;
 
     const mountEl = document.getElementById('chat-widget-mount');
     const chatWidget = new MathAI.ChatWidget({
@@ -114,7 +109,6 @@
       }
     });
 
-    // Help modal
     const helpBtn = document.getElementById('help-btn');
     const helpModal = document.getElementById('help-modal');
     const callTeacherBtn = document.getElementById('call-teacher-btn');

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Assistant — MathAI</title>
+  <title>English Assistant — 🌟 晨暉學習平台</title>
   <link rel="stylesheet" href="/math-ai-platform/css/style.css">
   <style>
     body { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
@@ -29,33 +29,29 @@
 </head>
 <body>
   <div class="chat-page">
-    <!-- Header -->
     <header class="chat-header">
       <div class="chat-user-info">
         <div class="chat-user-avatar">👤</div>
         <div class="chat-user-details">
-          <h2 class="chat-user-name" id="student-name">Student</h2>
-          <p class="chat-user-class" id="student-class">P1A English Class</p>
+          <h2 class="chat-user-name" id="student-name">張鈞保</h2>
+          <p class="chat-user-class" id="student-class">P1A English</p>
         </div>
       </div>
       <a href="javascript:history.back()" class="chat-back-btn">← Back</a>
     </header>
 
-    <!-- Chat Widget -->
     <main class="chat-main">
       <div class="chat-widget-container">
         <div id="chat-widget-mount"></div>
       </div>
     </main>
 
-    <!-- Help Button -->
-    <button class="chat-help-btn" id="help-btn" title="Need Help?">❓</button>
+    <button class="chat-help-btn" id="help-btn" title="Need help?">❓</button>
 
-    <!-- Help Modal -->
     <div class="help-modal" id="help-modal">
       <div class="help-modal-content">
         <div class="help-modal-title">🎓 Need Teacher Help?</div>
-        <p class="help-modal-text">The teacher will be notified immediately</p>
+        <p class="help-modal-text">The teacher will be notified right away</p>
         <div class="help-modal-actions">
           <button class="btn btn-primary btn-lg" id="call-teacher-btn">Call Teacher ✓</button>
           <button class="btn btn-secondary btn-lg" id="close-help-btn">Keep Trying</button>
@@ -64,7 +60,6 @@
     </div>
   </div>
 
-  <!-- ChatWidget Script -->
   <script src="/math-ai-platform/js/ChatWidget.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -74,25 +69,25 @@
 
     const STUDENTS_BY_CLASS = {
       'P1A': [
-        { id: 'p1a-01', name: 'John Chan', ability: 'high' },
-        { id: 'p1a-02', name: 'Mary Lee', ability: 'medium' },
-        { id: 'p1a-03', name: 'David Wong', ability: 'medium' },
-        { id: 'p1a-04', name: 'Sarah Chen', ability: 'low' },
-        { id: 'p1a-05', name: 'Mike Tang', ability: 'medium' }
+        { id: 'p1a-01', name: '張鈞保', ability: 'high' },
+        { id: 'p1a-02', name: '陳大文', ability: 'medium' },
+        { id: 'p1a-03', name: '李小红', ability: 'medium' },
+        { id: 'p1a-04', name: '王小明', ability: 'low' },
+        { id: 'p1a-05', name: '陳志明', ability: 'medium' }
       ],
       'P2A': [
-        { id: 'p2a-01', name: 'Emily Zhou', ability: 'high' },
-        { id: 'p2a-02', name: 'Kevin Wu', ability: 'medium' },
-        { id: 'p2a-03', name: 'Linda Sun', ability: 'medium' },
-        { id: 'p2a-04', name: 'Brian Zheng', ability: 'low' },
-        { id: 'p2a-05', name: 'Amy Ho', ability: 'medium' }
+        { id: 'p2a-01', name: '周芷若', ability: 'high' },
+        { id: 'p2a-02', name: '吳俊傑', ability: 'medium' },
+        { id: 'p2a-03', name: '孫文斌', ability: 'medium' },
+        { id: 'p2a-04', name: '鄭凱文', ability: 'low' },
+        { id: 'p2a-05', name: '何美琪', ability: 'medium' }
       ],
       'S1B': [
-        { id: 's1b-01', name: 'Chris Chu', ability: 'high' },
-        { id: 's1b-02', name: 'Grace Huang', ability: 'medium' },
-        { id: 's1b-03', name: 'Jason Lam', ability: 'medium' },
-        { id: 's1b-04', name: 'Nancy Cheung', ability: 'low' },
-        { id: 's1b-05', name: 'Steven Lau', ability: 'medium' }
+        { id: 's1b-01', name: '祝卓鋒', ability: 'high' },
+        { id: 's1b-02', name: '黃曉明', ability: 'medium' },
+        { id: 's1b-03', name: '林志玲', ability: 'medium' },
+        { id: 's1b-04', name: '張偉豪', ability: 'low' },
+        { id: 's1b-05', name: '劉德華', ability: 'medium' }
       ]
     };
 
@@ -100,7 +95,7 @@
     const currentStudent = students.find(s => s.id === studentId) || students[0];
 
     document.getElementById('student-name').textContent = currentStudent.name;
-    document.getElementById('student-class').textContent = `${classId} English Class`;
+    document.getElementById('student-class').textContent = `${classId} English`;
 
     const mountEl = document.getElementById('chat-widget-mount');
     const chatWidget = new MathAI.ChatWidget({
@@ -114,7 +109,6 @@
       }
     });
 
-    // Help modal
     const helpBtn = document.getElementById('help-btn');
     const helpModal = document.getElementById('help-modal');
     const callTeacherBtn = document.getElementById('call-teacher-btn');
@@ -123,8 +117,8 @@
     helpBtn.addEventListener('click', () => {
       helpModal.classList.add('show');
       if ('speechSynthesis' in window) {
-        const utt = new SpeechSynthesisUtterance('Need help from teacher?');
-        utt.lang = 'en-US';
+        const utt = new SpeechSynthesisUtterance('Need help?');
+        utt.lang = 'en';
         speechSynthesis.speak(utt);
       }
     });
@@ -134,7 +128,7 @@
     });
 
     callTeacherBtn.addEventListener('click', () => {
-      alert('Teacher has been notified! They will help you soon 🎓');
+      alert('Teacher notified! 🎓');
       helpModal.classList.remove('show');
     });
   </script>
