@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>選擇你的名字 — MathAI 科學</title>
+  <link rel="stylesheet" href="/math-ai-platform/css/style.css">
+  <style>
+    body { background: linear-gradient(135deg, #6c3483 0%, #9b59b6 100%); }
+    .page-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
+    .header { background: white; box-shadow: var(--shadow-md); }
+    .logo { color: #6c3483; }
+    .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+    .class-header { text-align: center; margin-bottom: 40px; }
+    .class-icon { font-size: 80px; margin-bottom: 16px; }
+    .class-name { font-size: 42px; font-weight: 800; color: white; margin-bottom: 8px; }
+    .class-label { font-size: 20px; color: rgba(255,255,255,0.8); }
+    .student-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; width: 100%; max-width: 900px; }
+    .student-btn { background: white; border-radius: 16px; padding: 20px; text-align: center; text-decoration: none; color: var(--text-dark); font-size: 20px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .student-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .student-btn .avatar { font-size: 48px; }
+    .student-btn.high .ability-dot { color: #27ae60; }
+    .student-btn.medium .ability-dot { color: #f39c12; }
+    .student-btn.low .ability-dot { color: #3498db; }
+    .back-link { color: white; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; opacity: 0.9; }
+    .back-link:hover { opacity: 1; }
+    .ability-badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+    .ability-badge.high { background: #d4edda; color: #155724; }
+    .ability-badge.medium { background: #fff3cd; color: #856404; }
+    .ability-badge.low { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <div class="container header-content">
+        <a href="/math-ai-platform/science/index.html" class="logo">
+          <span style="font-size: 28px;">🔬</span>
+          <span>MathAI 科學</span>
+        </a>
+        <nav class="nav-links">
+          <a href="/math-ai-platform/science/index.html">主頁</a>
+          <a href="/math-ai-platform/pages/dashboard.html">老師版</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <a href="/math-ai-platform/science/index.html" class="back-link">← 返回主頁</a>
+      
+      <div class="class-header">
+        <div class="class-icon">🔬</div>
+        <div class="class-name" id="className">P1A</div>
+        <div class="class-label">科學班</div>
+      </div>
+
+      <div class="student-grid" id="studentGrid">
+        <!-- Dynamically loaded -->
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);">
+      <div class="container">
+        MathAI 科學學習 — 匡智張玉瓊晨輝學校
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Parse class from URL
+    const params = new URLSearchParams(window.location.search);
+    const classId = params.get('class') || 'P1A';
+    const subject = params.get('subject') || 'science';
+
+    document.getElementById('className').textContent = classId;
+
+    // Mock student data per class
+    const studentData = {
+      'P1A': [
+        { id: 'p1a-01', name: '張鈞保', ability: 'high' },
+        { id: 'p1a-02', name: '陳大文', ability: 'medium' },
+        { id: 'p1a-03', name: '李小红', ability: 'medium' },
+        { id: 'p1a-04', name: '王小明', ability: 'low' },
+        { id: 'p1a-05', name: '陳志明', ability: 'medium' },
+      ],
+      'P2A': [
+        { id: 'p2a-01', name: '周芷若', ability: 'high' },
+        { id: 'p2a-02', name: '吳俊傑', ability: 'medium' },
+        { id: 'p2a-03', name: '孫文斌', ability: 'medium' },
+        { id: 'p2a-04', name: '鄭凱文', ability: 'low' },
+        { id: 'p2a-05', name: '何美琪', ability: 'medium' },
+      ],
+      'S1B': [
+        { id: 's1b-01', name: '祝卓鋒', ability: 'high' },
+        { id: 's1b-02', name: '黃曉明', ability: 'medium' },
+        { id: 's1b-03', name: '林志玲', ability: 'medium' },
+        { id: 's1b-04', name: '張偉豪', ability: 'low' },
+        { id: 's1b-05', name: '劉德華', ability: 'medium' },
+      ]
+    };
+
+    const abilityLabel = { high: '高能力', medium: '中度', low: '輕度' };
+    const abilityColor = { high: '🟢', medium: '🟡', low: '🔵' };
+
+    const students = studentData[classId] || studentData['P1A'];
+    const grid = document.getElementById('studentGrid');
+
+    students.forEach(s => {
+      const div = document.createElement('a');
+      div.href = `/math-ai-platform/science/chat.html?student=${s.id}&class=${classId}&subject=science`;
+      div.className = `student-btn ${s.ability}`;
+      div.innerHTML = `
+        <div class="avatar">👤</div>
+        <div>${s.name}</div>
+        <span class="ability-badge ${s.ability}">${abilityColor[s.ability]} ${abilityLabel[s.ability]}</span>
+      `;
+      grid.appendChild(div);
+    });
+  </script>
+</body>
+</html>
