@@ -82,6 +82,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT NOT NULL,
     class_id TEXT NOT NULL,
+    subject TEXT DEFAULT 'math',
     user_message TEXT NOT NULL,
     bot_response TEXT NOT NULL,
     is_help_request INTEGER DEFAULT 0,
@@ -233,7 +234,7 @@ app.post('/api/students', (req, res) => {
 
 // POST /api/messages — 記錄訊息
 app.post('/api/messages', (req, res) => {
-  const { student_id, class_id, user_message, bot_response, is_help_request = 0 } = req.body;
+  const { student_id, class_id, subject = 'math', user_message, bot_response, is_help_request = 0 } = req.body;
   
   if (!student_id || !class_id || !user_message || !bot_response) {
     return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -241,8 +242,8 @@ app.post('/api/messages', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO messages (student_id, class_id, user_message, bot_response, is_help_request) VALUES (?, ?, ?, ?, ?)'
-    ).run(student_id, class_id, user_message, bot_response, is_help_request ? 1 : 0);
+      'INSERT INTO messages (student_id, class_id, subject, user_message, bot_response, is_help_request) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(student_id, class_id, subject, user_message, bot_response, is_help_request ? 1 : 0);
 
     res.json({ success: true, data: { id: result.lastInsertRowid } });
   } catch (err) {
@@ -252,14 +253,33 @@ app.post('/api/messages', (req, res) => {
 
 // GET /api/dashboard/stats — Dashboard 統計
 app.get('/api/dashboard/stats', (req, res) => {
+  const { subject } = req.query;
   const totalStudents = db.prepare('SELECT COUNT(*) as count FROM students').get().count;
-  const totalMessages = db.prepare('SELECT COUNT(*) as count FROM messages').get().count;
-  const helpRequests = db.prepare('SELECT COUNT(*) as count FROM messages WHERE is_help_request = 1').get().count;
+  
+  let msgQuery, msgParams;
+  let helpQuery, helpParams;
+  
+  if (subject) {
+    msgQuery = 'SELECT COUNT(*) as count FROM messages WHERE subject = ?';
+    helpQuery = 'SELECT COUNT(*) as count FROM messages WHERE is_help_request = 1 AND subject = ?';
+    msgParams = [subject];
+    helpParams = [subject];
+  } else {
+    msgQuery = 'SELECT COUNT(*) as count FROM messages';
+    helpQuery = 'SELECT COUNT(*) as count FROM messages WHERE is_help_request = 1';
+    msgParams = [];
+    helpParams = [];
+  }
+  
+  const totalMessages = db.prepare(msgQuery).get(...msgParams).count;
+  const helpRequests = db.prepare(helpQuery).get(...helpParams).count;
 
   const today = new Date().toISOString().split('T')[0];
-  const todayMessages = db.prepare(
-    "SELECT COUNT(*) as count FROM messages WHERE date(created_at) = ?"
-  ).get(today).count;
+  const todayQuery = subject 
+    ? "SELECT COUNT(*) as count FROM messages WHERE date(created_at) = ? AND subject = ?"
+    : "SELECT COUNT(*) as count FROM messages WHERE date(created_at) = ?";
+  const todayParams = subject ? [today, subject] : [today];
+  const todayMessages = db.prepare(todayQuery).get(...todayParams).count;
 
   res.json({
     success: true,
@@ -425,11 +445,11 @@ app.post('/api/llm/stream', async (req, res) => {
       res.end();
     }
 
-    // 記錄到數據庫
+// 記錄到數據庫
     if (student_id && class_id) {
       db.prepare(
-        'INSERT INTO messages (student_id, class_id, user_message, bot_response) VALUES (?, ?, ?, ?)'
-      ).run(student_id, class_id, message, fullResponse || '[streaming]');
+        'INSERT INTO messages (student_id, class_id, subject, user_message, bot_response) VALUES (?, ?, ?, ?, ?)'
+      ).run(student_id, class_id, subject, message, fullResponse || '[streaming]');
     }
 
   } catch (err) {
