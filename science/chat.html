@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>科學助手 — MathAI</title>
+  <link rel="stylesheet" href="/math-ai-platform/css/style.css">
+  <style>
+    body { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); }
+    .chat-page { display: flex; flex-direction: column; min-height: 100vh; }
+    .chat-header { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-md); }
+    .chat-user-info { display: flex; align-items: center; gap: 12px; }
+    .chat-user-avatar { width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .chat-user-details h2 { font-size: 18px; font-weight: 700; }
+    .chat-user-details p { font-size: 13px; opacity: 0.85; }
+    .chat-back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-size: 16px; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .chat-back-btn:hover { background: rgba(255,255,255,0.3); }
+    .chat-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: var(--bg-light); }
+    .chat-widget-container { width: 100%; max-width: 700px; }
+    .chat-help-btn { position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px; background: var(--warning); color: var(--text-dark); border: none; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: var(--shadow-lg); transition: all 0.2s; z-index: 100; }
+    .chat-help-btn:hover { transform: scale(1.1); }
+    .help-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .help-modal.show { display: flex; }
+    .help-modal-content { background: white; border-radius: var(--radius-lg); padding: 32px; max-width: 500px; width: 90%; text-align: center; }
+    .help-modal-title { font-size: 24px; font-weight: bold; margin-bottom: 16px; }
+    .help-modal-text { font-size: 18px; color: var(--text-muted); margin-bottom: 24px; }
+    .help-modal-actions { display: flex; gap: 12px; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="chat-page">
+    <!-- Header -->
+    <header class="chat-header">
+      <div class="chat-user-info">
+        <div class="chat-user-avatar">👤</div>
+        <div class="chat-user-details">
+          <h2 class="chat-user-name" id="student-name">張鈞保</h2>
+          <p class="chat-user-class" id="student-class">P1A 科學班</p>
+        </div>
+      </div>
+      <a href="javascript:history.back()" class="chat-back-btn">← 返回</a>
+    </header>
+
+    <!-- Chat Widget -->
+    <main class="chat-main">
+      <div class="chat-widget-container">
+        <div id="chat-widget-mount"></div>
+      </div>
+    </main>
+
+    <!-- Help Button -->
+    <button class="chat-help-btn" id="help-btn" title="需要幫助？">❓</button>
+
+    <!-- Help Modal -->
+    <div class="help-modal" id="help-modal">
+      <div class="help-modal-content">
+        <div class="help-modal-title">🎓 需要老師幫助？</div>
+        <p class="help-modal-text">老師會立即知道你想求助</p>
+        <div class="help-modal-actions">
+          <button class="btn btn-primary btn-lg" id="call-teacher-btn">叫老師幫我 ✓</button>
+          <button class="btn btn-secondary btn-lg" id="close-help-btn">繼續自己試</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ChatWidget Script -->
+  <script src="/math-ai-platform/js/ChatWidget.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const studentId = params.get('student') || 'p1a-01';
+    const classId = params.get('class') || 'P1A';
+    const subject = params.get('subject') || 'science';
+
+    const STUDENTS_BY_CLASS = {
+      'P1A': [
+        { id: 'p1a-01', name: '張鈞保', ability: 'high' },
+        { id: 'p1a-02', name: '陳大文', ability: 'medium' },
+        { id: 'p1a-03', name: '李小红', ability: 'medium' },
+        { id: 'p1a-04', name: '王小明', ability: 'low' },
+        { id: 'p1a-05', name: '陳志明', ability: 'medium' }
+      ],
+      'P2A': [
+        { id: 'p2a-01', name: '周芷若', ability: 'high' },
+        { id: 'p2a-02', name: '吳俊傑', ability: 'medium' },
+        { id: 'p2a-03', name: '孫文斌', ability: 'medium' },
+        { id: 'p2a-04', name: '鄭凱文', ability: 'low' },
+        { id: 'p2a-05', name: '何美琪', ability: 'medium' }
+      ],
+      'S1B': [
+        { id: 's1b-01', name: '祝卓鋒', ability: 'high' },
+        { id: 's1b-02', name: '黃曉明', ability: 'medium' },
+        { id: 's1b-03', name: '林志玲', ability: 'medium' },
+        { id: 's1b-04', name: '張偉豪', ability: 'low' },
+        { id: 's1b-05', name: '劉德華', ability: 'medium' }
+      ]
+    };
+
+    const students = STUDENTS_BY_CLASS[classId] || [];
+    const currentStudent = students.find(s => s.id === studentId) || students[0];
+
+    document.getElementById('student-name').textContent = currentStudent.name;
+    document.getElementById('student-class').textContent = `${classId} 科學班`;
+
+    const mountEl = document.getElementById('chat-widget-mount');
+    const chatWidget = new MathAI.ChatWidget({
+      container: mountEl,
+      studentName: currentStudent.name,
+      classId: classId,
+      subject: subject,
+      voiceEnabled: true,
+      onMessage: (userMsg, botMsg) => {
+        console.log('Message logged:', { studentId, userMsg, botMsg });
+      }
+    });
+
+    // Help modal
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const callTeacherBtn = document.getElementById('call-teacher-btn');
+    const closeHelpBtn = document.getElementById('close-help-btn');
+
+    helpBtn.addEventListener('click', () => {
+      helpModal.classList.add('show');
+      if ('speechSynthesis' in window) {
+        const utt = new SpeechSynthesisUtterance('需要老師幫手？');
+        utt.lang = 'zh-HK';
+        speechSynthesis.speak(utt);
+      }
+    });
+
+    closeHelpBtn.addEventListener('click', () => {
+      helpModal.classList.remove('show');
+    });
+
+    callTeacherBtn.addEventListener('click', () => {
+      alert('已通知老師！老師會盡快來幫你 🎓');
+      helpModal.classList.remove('show');
+    });
+  </script>
+</body>
+</html>
