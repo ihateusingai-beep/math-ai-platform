@@ -164,12 +164,14 @@
 
   <script>
     // ========================================
-    // URL 參數獲取班級ID
+    // URL 參數獲取班級ID和科目
     // ========================================
     const params = new URLSearchParams(window.location.search);
     const classId = params.get('class') || 'P1A';
+    const subject = params.get('subject') || 'math';
 
     document.getElementById('class-name').textContent = classId;
+    document.getElementById('class-subtitle').textContent = subject === 'chinese' ? '中文班' : subject === 'english' ? '英文班' : subject === 'science' ? '常識班' : '數學班';
 
     // ========================================
     // Mock 學生名單（Phase 1 靜態數據）
@@ -213,7 +215,7 @@
       const students = STUDENTS_BY_CLASS[classId] || STUDENTS_BY_CLASS['P1A'];
 
       grid.innerHTML = students.map(s => `
-        <a href="/math-ai-platform/pages/chat.html?student=${s.id}&class=${classId}" class="student-btn">
+        <a href="/math-ai-platform/pages/chat.html?student=${s.id}&class=${classId}&subject=${subject}" class="student-btn">
           <span class="student-btn-icon">${s.icon}</span>
           <span class="student-btn-name">${s.name}</span>
           <span class="student-btn-ability ability-${s.ability}">${ABILITY_LABELS[s.ability]}</span>

@@ -193,6 +193,7 @@
     const params = new URLSearchParams(window.location.search);
     const studentId = params.get('student') || 'p1a-01';
     const classId = params.get('class') || 'P1A';
+    const subject = params.get('subject') || 'math';
 
     // ========================================
     // Mock 學生名單（後期從API獲取）
@@ -227,7 +228,8 @@
 
     // 更新 header
     document.getElementById('student-name').textContent = currentStudent.name;
-    document.getElementById('student-class').textContent = `${classId} 數學班`;
+    const subjectLabels = { math: '數學班', chinese: '中文班', english: '英文班', science: '常識班' };
+    document.getElementById('student-class').textContent = `${classId} ${subjectLabels[subject] || '數學班'}`;
 
     // ========================================
     // 初始化 ChatWidget
@@ -237,11 +239,9 @@
       container: mountEl,
       studentName: currentStudent.name,
       classId: classId,
+      subject: subject,
       voiceEnabled: true,
-      onMessage: (userMsg, botMsg) => {
-        // Phase 2: 發送到後端記錄
-        console.log('Message logged:', { studentId, userMsg, botMsg });
-      }
+      onMessage: () => {}
     });
 
     // ========================================
