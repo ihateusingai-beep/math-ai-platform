@@ -222,7 +222,7 @@
             📊 教師Dashboard
             <span id="current-time" style="font-size: 16px; font-weight: normal; color: var(--text-muted);"></span>
           </h1>
-          <button class="btn btn-primary" onclick="location.reload()">🔄 刷新</button>
+          <button class="btn btn-primary" onclick="location.reload()" aria-label="刷新頁面">🔄 刷新</button>
         </div>
 
         <!-- Stats -->
@@ -259,9 +259,9 @@
 
         <!-- Class Tabs -->
         <div class="class-tabs" id="class-tabs">
-          <button class="class-tab active" data-class="P1A">P1A</button>
-          <button class="class-tab" data-class="P2A">P2A</button>
-          <button class="class-tab" data-class="S1B">S1B</button>
+          <button class="class-tab active" data-class="P1A" aria-label="切換至P1A班">P1A</button>
+          <button class="class-tab" data-class="P2A" aria-label="切換至P2A班">P2A</button>
+          <button class="class-tab" data-class="S1B" aria-label="切換至S1B班">S1B</button>
         </div>
 
         <!-- Student Table -->
@@ -269,8 +269,8 @@
           <div class="card-header">
             <h2 class="card-title">📋 學生概覽</h2>
             <div class="card-actions">
-              <button class="btn btn-sm btn-secondary">+ 新增學生</button>
-              <button class="btn btn-sm btn-secondary">📥 匯入名單</button>
+              <button class="btn btn-sm btn-secondary" aria-label="新增學生">+ 新增學生</button>
+              <button class="btn btn-sm btn-secondary" aria-label="匯入名單">📥 匯入名單</button>
             </div>
           </div>
 
