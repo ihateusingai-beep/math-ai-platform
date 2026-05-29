@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Learning — MathAI</title>
+  <link rel="stylesheet" href="/math-ai-platform/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    body { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%); }
+    .hero { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+    .hero-actions .btn-primary { background: #27ae60; }
+    .hero-actions .btn-primary:hover { background: #1e8449; }
+    .subject-card[data-subject="math"] { border-top: 4px solid #4a90d9; }
+    .subject-card[data-subject="chinese"] { border-top: 4px solid #e74c3c; }
+    .subject-card[data-subject="english"] { border-top: 4px solid #27ae60; }
+    .subject-card[data-subject="science"] { border-top: 4px solid #9b59b6; }
+    .back-link { color: white; opacity: 0.9; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+    .back-link:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Header -->
+    <header class="header">
+      <div class="container header-content">
+        <a href="/math-ai-platform/" class="logo">
+          <span style="font-size: 28px;">🔤</span>
+          <span>MathAI English</span>
+        </a>
+        <nav class="nav-links">
+          <a href="/math-ai-platform/">返回主頁</a>
+          <a href="/math-ai-platform/pages/dashboard.html">老師版</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <a href="/math-ai-platform/" class="back-link">← Back to Home</a>
+      <div class="hero-icon">🔤</div>
+      <h1 class="hero-title">English Learning Assistant</h1>
+      <p class="hero-subtitle">
+        Learn ABC, colors, animals & simple words! 🌟<br>
+        Step by step, let's master English together!
+      </p>
+      <div class="hero-actions">
+        <a href="/math-ai-platform/english/class-select.html" class="btn btn-primary btn-lg">Start Learning →</a>
+        <a href="/math-ai-platform/pages/dashboard.html" class="btn btn-secondary btn-lg">Teacher Login</a>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" style="background: white;">
+      <div class="container">
+        <h2 style="text-align: center; font-size: 32px; margin-bottom: 40px;">✨ I Can Help You With</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🔤</div>
+            <h3 class="feature-title">ABC Letters</h3>
+            <p class="feature-desc">Learn A-Z with fun images and sounds</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <h3 class="feature-title">Colors</h3>
+            <p class="feature-desc">Learn colors with colorful picture cards</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🐾</div>
+            <h3 class="feature-title">Animals</h3>
+            <p class="feature-desc">Meet animals and learn their names</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3 class="feature-title">Simple Words</h3>
+            <p class="feature-desc">Build vocabulary with easy words</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Class Selection -->
+    <section class="class-section" style="background: #f8f9fa;">
+      <div class="container">
+        <h2>Select Your Class</h2>
+        <div class="class-grid">
+          <a href="/math-ai-platform/english/class-select.html?class=P1A&subject=english" class="class-card">
+            <span class="class-card-icon">📗</span>
+            <span class="class-card-name">P1A</span>
+            <span class="class-card-desc">Primary 1A</span>
+          </a>
+          <a href="/math-ai-platform/english/class-select.html?class=P2A&subject=english" class="class-card">
+            <span class="class-card-icon">📘</span>
+            <span class="class-card-name">P2A</span>
+            <span class="class-card-desc">Primary 2A</span>
+          </a>
+          <a href="/math-ai-platform/english/class-select.html?class=S1B&subject=english" class="class-card">
+            <span class="class-card-icon">📙</span>
+            <span class="class-card-name">S1B</span>
+            <span class="class-card-desc">Secondary 1B</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Other Subjects -->
+    <section class="subject-section" style="background: white; padding: 40px 0;">
+      <div class="container">
+        <h2 style="text-align: center; font-size: 24px; margin-bottom: 20px;">Other Subjects</h2>
+        <div class="subject-grid" style="max-width: 700px;">
+          <a href="/math-ai-platform/" class="subject-card" data-subject="math">
+            <div class="subject-icon">🔢</div>
+            <div class="subject-name">Math</div>
+            <div class="subject-desc">Numbers, Shapes</div>
+          </a>
+          <a href="/math-ai-platform/chinese/index.html" class="subject-card" data-subject="chinese">
+            <div class="subject-icon">📚</div>
+            <div class="subject-name">Chinese</div>
+            <div class="subject-desc">Characters, Vocabulary</div>
+          </a>
+          <a href="/math-ai-platform/science/index.html" class="subject-card" data-subject="science">
+            <div class="subject-icon">🔬</div>
+            <div class="subject-name">Science</div>
+            <div class="subject-desc">Nature, Science</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        MathAI English Learning — 匡智張玉瓊晨輝學校<br>
+        Made with ❤️ for students
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
