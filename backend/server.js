@@ -445,13 +445,16 @@ app.post('/api/llm/stream', async (req, res) => {
       res.end();
     }
 
-// 記錄到數據庫
-    if (student_id && class_id) {
-      db.prepare(
-        'INSERT INTO messages (student_id, class_id, subject, user_message, bot_response) VALUES (?, ?, ?, ?, ?)'
-      ).run(student_id, class_id, subject, message, fullResponse || '[streaming]');
+    // 記錄到數據庫（streaming 完成後）
+    if (student_id && class_id && fullResponse) {
+      try {
+        db.prepare(
+          'INSERT INTO messages (student_id, class_id, subject, user_message, bot_response) VALUES (?, ?, ?, ?, ?)'
+        ).run(student_id, class_id, subject, message, fullResponse);
+      } catch (dbErr) {
+        console.error('[Stream] DB write error:', dbErr.message);
+      }
     }
-
   } catch (err) {
     console.error('[Stream] Error:', err);
 

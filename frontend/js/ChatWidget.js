@@ -734,7 +734,10 @@
       const messagesDiv = this.options.container.querySelector('#mathai-messages');
       const msgDiv = document.createElement('div');
       msgDiv.className = `mathai-message ${type}`;
-      msgDiv.innerHTML = `<div class="mathai-bubble">${text}</div>`;
+      const bubble = document.createElement('div');
+      bubble.className = 'mathai-bubble';
+      bubble.textContent = text; // ✅ XSS fix: textContent instead of innerHTML
+      msgDiv.appendChild(bubble);
       messagesDiv.appendChild(msgDiv);
 
       // 滾到底
